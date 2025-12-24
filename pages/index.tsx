@@ -1,5 +1,5 @@
 import Head from "next/head";
-import Image from "next/image";
+// import Image from "next/image";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
@@ -9,9 +9,10 @@ import { ArrowRightIcon, SparkleIcon, StarIcon } from "@/components/Icons";
 import { GemIcon, LeafIcon, ShieldIcon, TruckIcon } from "@/components/MiniIcon";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signInWithGoogle } from "@/services/login.service";
 import toast from "react-hot-toast";
+import { useAuth } from "@/providers/AuthProvider";
 
 const featured: Product[] = [
   {
@@ -95,6 +96,7 @@ function NavLink({ children }: { children: string }) {
 }
 
 export default function Home() {
+  const { isAuthenticated, refresh } = useAuth();
 
   const [signedIn, setSignedIn] = useState(false);
 
@@ -103,7 +105,16 @@ export default function Home() {
     if (signedIn) toast.success("Signed in successfully!");
     else toast.error("Sign in failed. Please try again.");
     setSignedIn(signedIn);
+    if (signedIn) refresh();
   }
+
+  useEffect(() => {
+    setSignedIn(isAuthenticated);
+  }, []);
+
+  useEffect(() => {
+    setSignedIn(isAuthenticated);
+  }, [isAuthenticated]);
 
   return (
     <>
