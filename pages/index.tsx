@@ -1,5 +1,4 @@
 import Head from "next/head";
-// import Image from "next/image";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
