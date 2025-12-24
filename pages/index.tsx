@@ -9,6 +9,8 @@ import { ArrowRightIcon, SparkleIcon, StarIcon } from "@/components/Icons";
 import { GemIcon, LeafIcon, ShieldIcon, TruckIcon } from "@/components/MiniIcon";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
+import { useState } from "react";
+import { signInWithGoogle } from "@/services/login.service";
 
 const featured: Product[] = [
   {
@@ -92,6 +94,14 @@ function NavLink({ children }: { children: string }) {
 }
 
 export default function Home() {
+
+  const [signedIn, setSignedIn] = useState(false);
+
+  const _signInWithGoogle = async () => {
+    signInWithGoogle();
+    setSignedIn(true);
+  }
+
   return (
     <>
       <Head>
@@ -134,9 +144,11 @@ export default function Home() {
                 >
                   Search
                 </button>
-                <Button variant="secondary" type="button">
+                {signedIn ? <Button variant="secondary" type="button">
                   Bag (2)
-                </Button>
+                </Button> : <Button variant="secondary" type="button" onClick={_signInWithGoogle}>
+                  Sign In
+                </Button>}
               </div>
             </div>
           </Container>
