@@ -1,6 +1,9 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import admin from "firebase-admin";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 if (!admin.apps.length) {
     admin.initializeApp({
@@ -23,6 +26,17 @@ export default async function handler(
     // Here, you would verify the token with Firebase Admin SDK
     // and fetch or create the user in your database.
     const user = await admin.auth().verifyIdToken(token);
-    console.log(user);
+    // Fetch or create the user in your database using Prisma
+    const userRecord = await prisma.user.upsert({
+        where: { email: user.email! },
+        update: {
+            updatedAt: new Date(),
+        },
+        create: {
+            email: user.email!,
+            name: user.name || null,
+            phoneNumber: user.phone_number || null,
+        },
+    });
     return response.status(200).json({ name: "John Doe" });
 }
