@@ -11,6 +11,7 @@ import { ProductCard, type Product } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
 import { useState } from "react";
 import { signInWithGoogle } from "@/services/login.service";
+import { toast } from "react-hot-toast";
 
 const featured: Product[] = [
   {
@@ -98,8 +99,10 @@ export default function Home() {
   const [signedIn, setSignedIn] = useState(false);
 
   const _signInWithGoogle = async () => {
-    signInWithGoogle();
-    setSignedIn(true);
+    const signedIn = await signInWithGoogle();
+    if (signedIn) toast.success("Signed in successfully!");
+    else toast.error("Sign in failed. Please try again.");
+    setSignedIn(signedIn);
   }
 
   return (
