@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { Badge } from "./Badge";
 
@@ -6,6 +7,8 @@ export type Product = {
     subtitle: string;
     price: string;
     tag?: string;
+    imageSrc: string;
+    imageAlt: string;
     tone: "amethyst" | "rose" | "aqua" | "amber";
 };
 
@@ -13,21 +16,17 @@ function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
 }
 
-const toneStyles: Record<Product["tone"], { orb: string; chip: string }> = {
+const toneStyles: Record<Product["tone"], { chip: string }> = {
     amethyst: {
-        orb: "from-violet-400/30 via-fuchsia-400/20 to-emerald-400/15",
         chip: "text-violet-200",
     },
     rose: {
-        orb: "from-rose-400/30 via-pink-400/20 to-emerald-400/15",
         chip: "text-rose-200",
     },
     aqua: {
-        orb: "from-cyan-400/30 via-sky-400/20 to-emerald-400/15",
         chip: "text-cyan-200",
     },
     amber: {
-        orb: "from-amber-400/30 via-orange-400/20 to-emerald-400/15",
         chip: "text-amber-200",
     },
 };
@@ -74,15 +73,17 @@ export function ProductCard({ product }: { product: Product }) {
                 </div>
 
                 <div className="mt-6">
-                    <div
-                        className={cn(
-                            "relative h-28 w-full overflow-hidden rounded-2xl bg-gradient-to-br",
-                            t.orb
-                        )}
-                    >
-                        <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-                        <div className="absolute -bottom-12 -right-10 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
-                        <div className="absolute inset-0 ring-1 ring-white/10" />
+                    <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
+                        <div className="relative aspect-[4/3] w-full">
+                            <Image
+                                src={product.imageSrc}
+                                alt={product.imageAlt}
+                                fill
+                                sizes="(min-width: 1024px) 260px, (min-width: 640px) 45vw, 90vw"
+                                className="object-cover transition duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-slate-950/20" />
+                        </div>
                     </div>
                 </div>
             </div>

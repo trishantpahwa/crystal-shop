@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Image from "next/image";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
@@ -15,6 +16,8 @@ const featured: Product[] = [
     subtitle: "Faceted violet glow set in a clean, modern silhouette.",
     price: "$68",
     tag: "Bestseller",
+    imageSrc: "https://mesmerizeindia.com/cdn/shop/files/GleamingHemimorphiteNaturalStoneBraceletWithMagSnap2.jpg?v=1761631765&width=1200",
+    imageAlt: "Two rings with purple gemstones",
     tone: "amethyst",
   },
   {
@@ -22,6 +25,8 @@ const featured: Product[] = [
     subtitle: "Soft blush crystal made for everyday calm and elegance.",
     price: "$54",
     tag: "Giftable",
+    imageSrc: "https://mesmerizeindia.com/cdn/shop/files/RamMicroCarvedInlayGoldTagNecklace1.jpg?v=1763531407&width=1200",
+    imageAlt: "A single crystal on a white surface",
     tone: "rose",
   },
   {
@@ -29,12 +34,16 @@ const featured: Product[] = [
     subtitle: "Bright, minimal studs that catch light from every angle.",
     price: "$42",
     tag: "New",
+    imageSrc: "https://mesmerizeindia.com/cdn/shop/files/Spiritual_Rudraksh_Natural_Stone_Pyrite_Om_Bracelet_With_Magsnap2.jpg?v=1760432975&width=1200",
+    imageAlt: "Amethyst earrings on a light surface",
     tone: "aqua",
   },
   {
-    name: "Amber Sun Chain",
+    name: "Yada Yada Hi Dharmasya Mahabharat MicroCarved Round Kada",
     subtitle: "Warm golden tones on a refined chain you can layer.",
     price: "$76",
+    imageSrc: "https://mesmerizeindia.com/cdn/shop/files/YadaYadaHiDharmasyaMahabharatMicroCarvedRoundKadaGold.jpg?v=1763374585&width=1200",
+    imageAlt: "A close-up of earrings on a book",
     tone: "amber",
   },
 ];
@@ -353,7 +362,7 @@ export default function Home() {
 
           <section className="mt-14 sm:mt-20">
             <Container>
-              <div className="rounded-[40px] bg-gradient-to-br from-white/7 via-white/5 to-white/3 p-6 ring-1 ring-white/10 sm:p-10">
+              <div className="rounded-[40px] bg-white/5 p-6 ring-1 ring-white/10 sm:p-10">
                 <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
                   <SectionTitle
                     eyebrow="Loved"
