@@ -4,9 +4,7 @@ import { auth, provider } from "@/config/firebase.config";
 const signInWithGoogle = async () => {
     try {
         const result = await signInWithPopup(auth, new provider());
-        const credential = provider.credentialFromResult(result);
-        const token = credential?.accessToken;
-        // Verify access token with backend
+        const token = await result.user.getIdToken();
         const response = await fetch("/api/user", {
             method: "PUT",
             headers: {
