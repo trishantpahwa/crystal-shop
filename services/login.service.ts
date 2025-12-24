@@ -14,12 +14,14 @@ const signInWithGoogle = async () => {
         });
         if (response.ok) {
             const data = await response.json();
-            console.log("Backend verification successful:", data);
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("refreshToken", data.refreshToken);
+            return true;
         } else {
-            console.error("Backend verification failed:", response.statusText);
+            return false;
         }
-    } catch (error) {
-        console.error("Error during Google sign-in:", error);
+    } catch (error) { 
+        return false;
     }
 };
 
