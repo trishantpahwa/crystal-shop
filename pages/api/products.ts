@@ -2,14 +2,13 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
 import type { Prisma } from "@prisma/client";
 
-type SortBy = "createdAt" | "updatedAt" | "name" | "price" | "tone" | "tag";
+type SortBy = "createdAt" | "updatedAt" | "name" | "price" | "tone";
 const SORT_FIELDS: ReadonlyArray<SortBy> = [
     "createdAt",
     "updatedAt",
     "name",
     "price",
     "tone",
-    "tag",
 ];
 
 export default async function handler(
@@ -29,7 +28,6 @@ export default async function handler(
 
 async function GET(request: NextApiRequest, response: NextApiResponse) {
     const {
-        tag,
         tone,
         q,
         sortBy = "createdAt",
@@ -40,7 +38,6 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
 
     const where: any = {};
 
-    if (typeof tag === "string" && tag.trim()) where.tag = tag.trim();
     if (typeof tone === "string" && tone.trim()) where.tone = tone.trim();
 
     if (typeof q === "string" && q.trim()) {

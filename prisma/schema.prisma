@@ -27,7 +27,6 @@ model Product {
   name      String
   subtitle  String
   price     String
-  tag       String?
   imageSrc  String
   imageAlt  String
   tone      String

@@ -32,7 +32,7 @@ async function PATCH(request: NextApiRequest, response: NextApiResponse) {
             return response.status(400).json({ error: "Invalid product id" });
         }
 
-        const { name, subtitle, price, tag, imageSrc, imageAlt, tone } =
+        const { name, subtitle, price, imageSrc, imageAlt, tone } =
             request.body ?? {};
 
         const data: any = {};
@@ -42,7 +42,6 @@ async function PATCH(request: NextApiRequest, response: NextApiResponse) {
         if (typeof imageSrc === "string") data.imageSrc = imageSrc.trim();
         if (typeof imageAlt === "string") data.imageAlt = imageAlt.trim();
         if (typeof tone === "string") data.tone = tone.trim();
-        if (typeof tag === "string") data.tag = tag.trim() ? tag.trim() : null;
 
         const updatedProduct = await prisma.product.update({
             where: { id: productId },
