@@ -1,0 +1,79 @@
+import type { NextApiRequest, NextApiResponse } from "next";
+import prisma from "@/config/prisma.config";
+
+export default async function handler(
+    request: NextApiRequest,
+    response: NextApiResponse
+) {
+    switch (request.method) {
+        case "PATCH":
+            return PATCH(request, response);
+        case "DELETE":
+            return DELETE(request, response);
+        default:
+            response.setHeader("Allow", ["PATCH", "DELETE"]);
+            return response
+                .status(405)
+                .end(`Method ${request.method} Not Allowed`);
+    }
+}
+
+async function PATCH(request: NextApiRequest, response: NextApiResponse) {
+    try {
+        // Setup admin authorization later on => @trishantpahwa | 2025-12-26 13:31:29
+        // const token = request.headers.authorization?.split(" ")[1] ?? "";
+        // const userID = authorizeAdmin(token);
+
+        // if (!userID) {
+        //     return response.status(401).json({ error: "Unauthorized" });
+        // }
+        const productId = Number(request.query.slug);
+        if (!productId) {
+            return response.status(400).json({ error: "Invalid product id" });
+        }
+
+        const { name, subtitle, price, tag, imageSrc, imageAlt, tone } =
+            request.body ?? {};
+
+        const data: any = {};
+        if (typeof name === "string") data.name = name.trim();
+        if (typeof subtitle === "string") data.subtitle = subtitle.trim();
+        if (typeof price === "string") data.price = price.trim();
+        if (typeof imageSrc === "string") data.imageSrc = imageSrc.trim();
+        if (typeof imageAlt === "string") data.imageAlt = imageAlt.trim();
+        if (typeof tone === "string") data.tone = tone.trim();
+        if (typeof tag === "string") data.tag = tag.trim() ? tag.trim() : null;
+
+        const updatedProduct = await prisma.product.update({
+            where: { id: productId },
+            data,
+        });
+
+        return response.status(200).json({ product: updatedProduct });
+    } catch (error) {
+        console.error("Error updating product:", error);
+        return response.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+async function DELETE(request: NextApiRequest, response: NextApiResponse) {
+    try {
+        // const token = request.headers.authorization?.split(" ")[1] ?? "";
+        // const userID = authorizeAdmin(token);
+
+        // if (!userID) {
+        //     return response.status(401).json({ error: "Unauthorized" });
+        // }
+
+        const { slug } = request.query;
+
+        const deletedProduct = await prisma.product.delete({
+            where: { id: Number(slug) },
+        });
+
+        return response.status(200).json({ product: deletedProduct });
+    } catch (error) {
+        console.error("Error deleting product:", error);
+        return response.status(500).json({ error: "Internal Server Error" });
+    }
+}
