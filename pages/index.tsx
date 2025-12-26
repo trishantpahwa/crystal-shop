@@ -217,7 +217,7 @@ export default function Home() {
                           <div className="mt-4 flex items-end justify-between">
                             <div>
                               <p className="text-xs text-white/60">Bundle</p>
-                              <p className="text-2xl font-semibold">$132</p>
+                              <p className="text-2xl font-semibold">₹ 132</p>
                             </div>
                             <button
                               type="button"
