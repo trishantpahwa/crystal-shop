@@ -51,7 +51,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
             if (response.ok) {
                 const data = await response.json();
-                const transformedItems = (data.items || []).map((item: any) => ({
+                const transformedItems = (data.items || []).map((item: unknown) => ({
                     ...item,
                     product: {
                         ...item.product,

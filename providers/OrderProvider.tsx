@@ -58,9 +58,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
             if (response.ok) {
                 const data = await response.json();
-                const transformedOrders = data.map((order: any) => ({
+                const transformedOrders = data.map((order: unknown) => ({
                     ...order,
-                    items: order.items.map((item: any) => ({
+                    items: order.items.map((item: unknown) => ({
                         ...item,
                         product: {
                             ...item.product,

@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
@@ -287,8 +288,8 @@ export default function AdminProductPage() {
         try {
             const pathname = `products/${Date.now()}`;
             const result = await vercelUpload(pathname, file, { handleUploadUrl: "/api/blob/upload", access: 'public' });
-            return typeof result === "string" ? result : (result as any)?.url ?? "";
-        } catch (e) {
+            return typeof result === "string" ? result : (result as { url?: string })?.url ?? "";
+        } catch (_e) {
             toast.error("Image upload failed");
             return "";
         }
@@ -391,7 +392,7 @@ export default function AdminProductPage() {
                                         <div className="space-y-2">
                                             {createForm.images.map((img, index) => (
                                                 <div key={index} className="flex items-center gap-3 p-2 bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] rounded-lg">
-                                                    <img src={img.src} alt={img.alt} className="w-16 h-16 object-cover rounded" />
+                                                    <Image src={img.src} alt={img.alt} width={64} height={64} className="w-16 h-16 object-cover rounded" />
                                                     <input
                                                         className={inputClassName + " flex-1"}
                                                         placeholder="Image alt"
@@ -689,7 +690,7 @@ export default function AdminProductPage() {
                                             <div className="space-y-2">
                                                 {editForm.images.map((img, index) => (
                                                     <div key={index} className="flex items-center gap-3 p-2 bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] rounded-lg">
-                                                        <img src={img.src} alt={img.alt} className="w-16 h-16 object-cover rounded" />
+                                                        <Image src={img.src} alt={img.alt} width={64} height={64} className="w-16 h-16 object-cover rounded" />
                                                         <input
                                                             className={inputClassName + " flex-1"}
                                                             placeholder="Image alt"

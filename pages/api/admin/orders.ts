@@ -28,9 +28,9 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
     const { status, skip = "0", take = "50" } = request.query;
 
     try {
-        const where: Record<string, any> = {};
+        const where: { status?: string } = {};
         if (status && status !== "all") {
-            where.status = status;
+            where.status = status as string;
         }
 
         const orders = await prisma.order.findMany({

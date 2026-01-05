@@ -59,7 +59,7 @@ async function PATCH(request: NextApiRequest, response: NextApiResponse) {
 
         const { name, subtitle, price, images, tone } = request.body ?? {};
 
-        const data: any = {};
+        const data: Record<string, unknown> = {};
         if (typeof name === "string") data.name = name.trim();
         if (typeof subtitle === "string") data.subtitle = subtitle.trim();
         if (typeof price === "string") data.price = price.trim();

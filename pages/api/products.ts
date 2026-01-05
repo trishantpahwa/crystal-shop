@@ -36,7 +36,7 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
         take = "24",
     } = request.query;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (typeof tone === "string" && tone.trim()) where.tone = tone.trim();
 

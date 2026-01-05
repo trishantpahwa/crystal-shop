@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
-import { ArrowLeftIcon, SparkleIcon, StarIcon } from "@/components/Icons";
+import { ArrowLeftIcon, SparkleIcon } from "@/components/Icons";
 import { useCart } from "@/providers/CartProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import toast from "react-hot-toast";
