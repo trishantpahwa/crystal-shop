@@ -51,7 +51,7 @@ function NavLink({ children }: { children: string }) {
   return (
     <a
       href="#"
-      className="text-sm text-white/70 transition hover:text-white"
+      className="text-sm text-[var(--color-text-muted)] transition hover:text-[var(--color-primary-text)]"
     >
       {children}
     </a>
@@ -101,21 +101,21 @@ export default function Home() {
         />
       </Head>
 
-      <div className="min-h-screen bg-slate-950 text-white">
+      <div className="min-h-screen bg-[var(--color-primary-bg)] text-[var(--color-primary-text)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 -z-10">
-          <div className="mx-auto h-[520px] max-w-6xl bg-gradient-to-b from-emerald-500/10 via-fuchsia-500/10 to-transparent blur-2xl" />
+          <div className="mx-auto h-[520px] max-w-6xl bg-gradient-to-b from-[var(--color-gradient-start)] via-[var(--color-gradient-middle)] to-[var(--color-gradient-end)] blur-2xl" />
         </div>
 
-        <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur">
+        <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[color-mix(in srgb, var(--color-primary-bg) 70%, transparent)] backdrop-blur">
           <Container>
             <div className="flex h-16 items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
-                  <GemIcon className="h-5 w-5 text-emerald-200" />
+                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[var(--color-secondary-bg)] ring-1 ring-[var(--color-border)]">
+                  <GemIcon className="h-5 w-5 text-[var(--color-emerald-accent)]" />
                 </div>
                 <div className="leading-tight">
                   <p className="text-sm font-semibold tracking-tight">Crystal Atelier</p>
-                  <p className="text-xs text-white/55">Modern crystal jewellery</p>
+                  <p className="text-xs text-[var(--color-text-dim)]">Modern crystal jewellery</p>
                 </div>
               </div>
 
@@ -129,7 +129,7 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="hidden rounded-full bg-white/5 px-4 py-2 text-sm text-white/80 ring-1 ring-white/10 transition hover:bg-white/10 sm:inline-flex"
+                  className="hidden rounded-full bg-[var(--color-secondary-bg)] px-4 py-2 text-sm text-[var(--color-text-light)] ring-1 ring-[var(--color-border)] transition hover:bg-[var(--color-accent-bg)] sm:inline-flex"
                 >
                   Search
                 </button>
@@ -149,15 +149,15 @@ export default function Home() {
               <div className="grid items-center gap-10 lg:grid-cols-2">
                 <div>
                   <Badge>
-                    <SparkleIcon className="h-4 w-4 text-emerald-200" />
+                    <SparkleIcon className="h-4 w-4 text-[var(--color-emerald-accent)]" />
                     Hand-finished • Ethically sourced
                   </Badge>
 
-                  <h1 className="mt-6 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+                  <h1 className="mt-6 text-4xl font-semibold tracking-tight text-[var(--color-primary-text)] sm:text-5xl">
                     Crystal jewellery
-                    <span className="block text-white/70">crafted to glow — day and night.</span>
+                    <span className="block text-[var(--color-text-muted)]">crafted to glow — day and night.</span>
                   </h1>
-                  <p className="mt-5 max-w-xl text-base leading-7 text-white/65">
+                  <p className="mt-5 max-w-xl text-base leading-7 text-[var(--color-text-subtle)]">
                     A calm, luxurious collection of crystal rings, pendants and earrings.
                     Minimal silhouettes. Maximum light.
                   </p>
@@ -184,22 +184,22 @@ export default function Home() {
                     ].map((item) => (
                       <div
                         key={item.v}
-                        className="rounded-3xl bg-white/5 p-4 ring-1 ring-white/10"
+                        className="rounded-3xl bg-[var(--color-secondary-bg)] p-4 ring-1 ring-[var(--color-border)]"
                       >
-                        <p className="text-lg font-semibold text-white">{item.k}</p>
-                        <p className="mt-1 text-xs text-white/60">{item.v}</p>
+                        <p className="text-lg font-semibold text-[var(--color-primary-text)]">{item.k}</p>
+                        <p className="mt-1 text-xs text-[var(--color-text-disabled)]">{item.v}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="relative">
-                  <div className="absolute -inset-6 -z-10 rounded-[48px] bg-gradient-to-br from-emerald-400/15 via-fuchsia-400/10 to-sky-400/15 blur-xl" />
-                  <div className="overflow-hidden rounded-[40px] bg-white/5 ring-1 ring-white/10">
+                  <div className="absolute -inset-6 -z-10 rounded-[48px] bg-gradient-to-br from-[var(--color-gradient-hero-start)] via-[var(--color-gradient-hero-middle)] to-[var(--color-gradient-hero-end)] blur-xl" />
+                  <div className="overflow-hidden rounded-[40px] bg-[var(--color-secondary-bg)] ring-1 ring-[var(--color-border)]">
                     <div className="relative p-6 sm:p-8">
                       <div className="flex items-center justify-between">
-                        <Badge className="text-emerald-200">Limited winter drop</Badge>
-                        <div className="flex items-center gap-1 text-emerald-200">
+                        <Badge className="text-[var(--color-emerald-accent)]">Limited winter drop</Badge>
+                        <div className="flex items-center gap-1 text-[var(--color-emerald-accent)]">
                           <StarIcon className="h-4 w-4" />
                           <StarIcon className="h-4 w-4" />
                           <StarIcon className="h-4 w-4" />
@@ -209,21 +209,21 @@ export default function Home() {
                       </div>
 
                       <div className="mt-6 grid gap-4">
-                        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-400/25 via-fuchsia-400/15 to-emerald-400/15 p-6 ring-1 ring-white/10">
-                          <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-                          <div className="absolute -bottom-14 -right-10 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
+                        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-400/25 via-fuchsia-400/15 to-emerald-400/15 p-6 ring-1 ring-[var(--color-border)]">
+                          <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-[var(--color-accent-bg)] blur-2xl" />
+                          <div className="absolute -bottom-14 -right-10 h-44 w-44 rounded-full bg-[var(--color-accent-bg)] blur-2xl" />
                           <p className="text-sm font-semibold">Aura Set</p>
-                          <p className="mt-1 text-sm text-white/70">
+                          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                             3-piece bundle • ring + pendant + studs
                           </p>
                           <div className="mt-4 flex items-end justify-between">
                             <div>
-                              <p className="text-xs text-white/60">Bundle</p>
+                              <p className="text-xs text-[var(--color-text-disabled)]">Bundle</p>
                               <p className="text-2xl font-semibold">₹ 132</p>
                             </div>
                             <button
                               type="button"
-                              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/10 transition hover:bg-white/15"
+                              className="rounded-full bg-[var(--color-accent-bg)] px-4 py-2 text-sm font-medium text-[var(--color-primary-text)] ring-1 ring-[var(--color-border)] transition hover:bg-[color-mix(in srgb, var(--color-accent-bg) 115%, transparent)]"
                             >
                               View set
                             </button>
@@ -251,10 +251,10 @@ export default function Home() {
                           ].map((m) => (
                             <div
                               key={m.label}
-                              className="rounded-3xl bg-white/5 p-4 ring-1 ring-white/10"
+                              className="rounded-3xl bg-[var(--color-secondary-bg)] p-4 ring-1 ring-[var(--color-border)]"
                             >
-                              <p className="text-xs text-white/60">{m.label}</p>
-                              <p className="mt-1 text-sm font-semibold text-white">
+                              <p className="text-xs text-[var(--color-text-disabled)]">{m.label}</p>
+                              <p className="mt-1 text-sm font-semibold text-[var(--color-primary-text)]">
                                 {m.value}
                               </p>
                             </div>
@@ -292,7 +292,7 @@ export default function Home() {
 
           <section className="mt-14 sm:mt-20">
             <Container>
-              <div className="rounded-[40px] bg-white/5 p-6 ring-1 ring-white/10 sm:p-10">
+              <div className="rounded-[40px] bg-[var(--color-secondary-bg)] p-6 ring-1 ring-[var(--color-border)] sm:p-10">
                 <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
                   <SectionTitle
                     eyebrow="Shop"
@@ -306,16 +306,16 @@ export default function Home() {
                         key={c.name}
                         href="#"
                         className={cn(
-                          "group rounded-3xl bg-white/5 p-5 ring-1 ring-white/10 transition hover:bg-white/7",
+                          "group rounded-3xl bg-[var(--color-secondary-bg)] p-5 ring-1 ring-[var(--color-border)] transition hover:bg-[color-mix(in srgb, var(--color-secondary-bg) 140%, transparent)]",
                           idx === 0 && "sm:col-span-2"
                         )}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-white">{c.name}</p>
-                            <p className="mt-2 text-sm text-white/65">{c.desc}</p>
+                            <p className="text-sm font-semibold text-[var(--color-primary-text)]">{c.name}</p>
+                            <p className="mt-2 text-sm text-[var(--color-text-subtle)]">{c.desc}</p>
                           </div>
-                          <ArrowRightIcon className="h-5 w-5 text-white/50 transition group-hover:text-white" />
+                          <ArrowRightIcon className="h-5 w-5 text-[var(--color-text-faint)] transition group-hover:text-[var(--color-primary-text)]" />
                         </div>
                       </a>
                     ))}
@@ -363,14 +363,14 @@ export default function Home() {
 
           <section className="mt-14 sm:mt-20">
             <Container>
-              <div className="rounded-[40px] bg-white/5 p-6 ring-1 ring-white/10 sm:p-10">
+              <div className="rounded-[40px] bg-[var(--color-secondary-bg)] p-6 ring-1 ring-[var(--color-border)] sm:p-10">
                 <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
                   <SectionTitle
                     eyebrow="Loved"
                     title="Real reviews, real sparkle"
                     subtitle="A few notes from customers who wear their crystals on repeat."
                   />
-                  <div className="flex items-center gap-2 text-emerald-200">
+                  <div className="flex items-center gap-2 text-[var(--color-emerald-accent)]">
                     <div className="flex items-center gap-1">
                       <StarIcon className="h-4 w-4" />
                       <StarIcon className="h-4 w-4" />
@@ -378,7 +378,7 @@ export default function Home() {
                       <StarIcon className="h-4 w-4" />
                       <StarIcon className="h-4 w-4" />
                     </div>
-                    <p className="text-sm text-white/70">4.9 average</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">4.9 average</p>
                   </div>
                 </div>
 
@@ -386,17 +386,17 @@ export default function Home() {
                   {testimonials.map((t) => (
                     <figure
                       key={t.name}
-                      className="rounded-3xl bg-slate-950/35 p-6 ring-1 ring-white/10"
+                      className="rounded-3xl bg-[var(--color-primary-bg)]/35 p-6 ring-1 ring-[var(--color-border)]"
                     >
-                      <blockquote className="text-sm leading-6 text-white/75">
+                      <blockquote className="text-sm leading-6 text-[color-mix(in srgb, var(--color-primary-text) 75%, transparent)]">
                         “{t.quote}”
                       </blockquote>
                       <figcaption className="mt-4 flex items-center justify-between gap-4">
                         <div>
-                          <p className="text-sm font-semibold text-white">{t.name}</p>
-                          <p className="text-xs text-white/55">{t.meta}</p>
+                          <p className="text-sm font-semibold text-[var(--color-primary-text)]">{t.name}</p>
+                          <p className="text-xs text-[var(--color-text-dim)]">{t.meta}</p>
                         </div>
-                        <div className="flex items-center gap-1 text-emerald-200">
+                        <div className="flex items-center gap-1 text-[var(--color-emerald-accent)]">
                           <StarIcon className="h-4 w-4" />
                           <StarIcon className="h-4 w-4" />
                           <StarIcon className="h-4 w-4" />
@@ -413,7 +413,7 @@ export default function Home() {
 
           <section className="mt-14 pb-16 sm:mt-20 sm:pb-24">
             <Container>
-              <div className="rounded-[40px] bg-white/5 p-6 ring-1 ring-white/10 sm:p-10">
+              <div className="rounded-[40px] bg-[var(--color-secondary-bg)] p-6 ring-1 ring-[var(--color-border)] sm:p-10">
                 <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
                   <div className="max-w-xl">
                     <SectionTitle
@@ -436,13 +436,13 @@ export default function Home() {
                         type="email"
                         required
                         placeholder="you@example.com"
-                        className="h-11 w-full rounded-full bg-white/5 px-4 text-sm text-white placeholder:text-white/40 ring-1 ring-white/10 outline-none transition focus:ring-emerald-500/40"
+                        className="h-11 w-full rounded-full bg-[var(--color-secondary-bg)] px-4 text-sm text-[var(--color-primary-text)] placeholder:text-[color-mix(in srgb, var(--color-primary-text) 40%, transparent)] ring-1 ring-[var(--color-border)] outline-none transition focus:ring-emerald-500/40"
                       />
                       <Button type="submit" className="h-11">
                         Subscribe
                       </Button>
                     </div>
-                    <p className="mt-3 text-xs text-white/50">
+                    <p className="mt-3 text-xs text-[var(--color-text-faint)]">
                       No spam. Unsubscribe anytime.
                     </p>
                   </form>
@@ -452,72 +452,72 @@ export default function Home() {
           </section>
         </main>
 
-        <footer className="border-t border-white/10">
+        <footer className="border-t border-[var(--color-border)]">
           <Container>
             <div className="py-10">
               <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
                 <div>
                   <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
-                      <GemIcon className="h-5 w-5 text-emerald-200" />
+                    <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[var(--color-secondary-bg)] ring-1 ring-[var(--color-border)]">
+                      <GemIcon className="h-5 w-5 text-[var(--color-emerald-accent)]" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Crystal Atelier</p>
-                      <p className="text-xs text-white/55">Modern crystal jewellery</p>
+                      <p className="text-xs text-[var(--color-text-dim)]">Modern crystal jewellery</p>
                     </div>
                   </div>
-                  <p className="mt-4 max-w-sm text-sm leading-6 text-white/65">
+                  <p className="mt-4 max-w-sm text-sm leading-6 text-[var(--color-text-subtle)]">
                     Sleek silhouettes, luminous crystals, and calm luxury.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-disabled)]">
                       Shop
                     </p>
                     <div className="space-y-2">
-                      <a className="block text-sm text-white/70 hover:text-white" href="#">
+                      <a className="block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary-text)]" href="#">
                         Rings
                       </a>
-                      <a className="block text-sm text-white/70 hover:text-white" href="#">
+                      <a className="block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary-text)]" href="#">
                         Necklaces
                       </a>
-                      <a className="block text-sm text-white/70 hover:text-white" href="#">
+                      <a className="block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary-text)]" href="#">
                         Earrings
                       </a>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-disabled)]">
                       Company
                     </p>
                     <div className="space-y-2">
-                      <a className="block text-sm text-white/70 hover:text-white" href="#">
+                      <a className="block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary-text)]" href="#">
                         About
                       </a>
-                      <a className="block text-sm text-white/70 hover:text-white" href="#">
+                      <a className="block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary-text)]" href="#">
                         Sustainability
                       </a>
-                      <a className="block text-sm text-white/70 hover:text-white" href="#">
+                      <a className="block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary-text)]" href="#">
                         Careers
                       </a>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-disabled)]">
                       Support
                     </p>
                     <div className="space-y-2">
-                      <a className="block text-sm text-white/70 hover:text-white" href="#">
+                      <a className="block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary-text)]" href="#">
                         Shipping
                       </a>
-                      <a className="block text-sm text-white/70 hover:text-white" href="#">
+                      <a className="block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary-text)]" href="#">
                         Returns
                       </a>
-                      <a className="block text-sm text-white/70 hover:text-white" href="#">
+                      <a className="block text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary-text)]" href="#">
                         Contact
                       </a>
                     </div>
@@ -527,9 +527,9 @@ export default function Home() {
 
               <div className="mt-10">
                 <Divider />
-                <div className="mt-6 flex flex-col gap-3 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mt-6 flex flex-col gap-3 text-xs text-[var(--color-text-faint)] sm:flex-row sm:items-center sm:justify-between">
                   <p>© {new Date().getFullYear()} Crystal Atelier. All rights reserved.</p>
-                  <p className="text-white/45">Crafted with Tailwind + React</p>
+                  <p className="text-[var(--color-text-very-faint)]">Crafted with Tailwind + React</p>
                 </div>
               </div>
             </div>

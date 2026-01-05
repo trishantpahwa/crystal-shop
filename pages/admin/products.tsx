@@ -39,7 +39,7 @@ type ProductInput = {
 };
 
 const inputClassName =
-    "w-full rounded-2xl bg-white/5 px-4 py-2.5 text-sm text-white ring-1 ring-white/10 placeholder:text-white/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30";
+    "w-full rounded-2xl bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] px-4 py-2.5 text-sm text-[var(--color-primary-text)] ring-1 ring-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)] placeholder:text-[var(--color-primary-text)]/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in srgb, var(--color-emerald-accent) 30%, transparent)]";
 
 function formatDate(value: string) {
     const date = new Date(value);
@@ -256,8 +256,8 @@ export default function AdminProductPage() {
                 <title>Admin — Products</title>
             </Head>
 
-            <div className="min-h-screen bg-slate-950 text-white">
-                <header className="border-b border-white/10 bg-slate-950/70 backdrop-blur">
+            <div className="min-h-screen bg-[var(--color-primary-bg)] text-[var(--color-primary-text)]">
+                <header className="border-b border-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)] bg-[var(--color-primary-bg)]/70 backdrop-blur">
                     <Container>
                         <div className="flex h-16 items-center justify-between">
                             <p className="text-sm font-semibold tracking-tight">Admin</p>
@@ -278,7 +278,7 @@ export default function AdminProductPage() {
                                 subtitle="Create, edit, and delete products."
                             />
 
-                            <div className="mt-8 rounded-3xl bg-white/5 p-5 ring-1 ring-white/10">
+                            <div className="mt-8 rounded-3xl bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] p-5 ring-1 ring-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)]">
                                 <div className="flex items-center justify-between gap-4">
                                     <p className="text-sm font-semibold">Create product</p>
                                     <Button type="button" onClick={onCreate} disabled={!canCreate}>
@@ -345,7 +345,7 @@ export default function AdminProductPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-8 rounded-3xl bg-white/5 p-5 ring-1 ring-white/10">
+                            <div className="mt-8 rounded-3xl bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] p-5 ring-1 ring-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)]">
                                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                     <p className="text-sm font-semibold">Products</p>
                                     <div className="flex flex-col gap-3 sm:flex-row">
@@ -436,12 +436,12 @@ export default function AdminProductPage() {
                                 </div>
 
                                 {error ? (
-                                    <p className="mt-4 text-sm text-white/70">{error}</p>
+                                    <p className="mt-4 text-sm text-[var(--color-primary-text)]/70">{error}</p>
                                 ) : null}
 
                                 <div className="mt-4 overflow-x-auto">
                                     <table className="w-full min-w-[860px] text-left text-sm">
-                                        <thead className="text-white/70">
+                                        <thead className="text-[var(--color-primary-text)]/70">
                                             <tr>
                                                 <th className="py-3 pr-4 font-medium">Name</th>
                                                 <th className="py-3 pr-4 font-medium">Price</th>
@@ -453,15 +453,15 @@ export default function AdminProductPage() {
                                         </thead>
                                         <tbody>
                                             {products.map((p) => (
-                                                <tr key={p.id} className="border-t border-white/10">
+                                                <tr key={p.id} className="border-t border-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)]">
                                                     <td className="py-3 pr-4">
-                                                        <p className="font-medium text-white">{p.name}</p>
-                                                        <p className="mt-0.5 text-xs text-white/55">{p.subtitle}</p>
+                                                        <p className="font-medium text-[var(--color-primary-text)]">{p.name}</p>
+                                                        <p className="mt-0.5 text-xs text-[var(--color-primary-text)]/55">{p.subtitle}</p>
                                                     </td>
-                                                    <td className="py-3 pr-4 text-white/80">{p.price}</td>
-                                                    <td className="py-3 pr-4 text-white/80">{p.tone}</td>
-                                                    <td className="py-3 pr-4 text-white/80">{p.tag ?? "—"}</td>
-                                                    <td className="py-3 pr-4 text-white/60">{formatDate(p.updatedAt)}</td>
+                                                    <td className="py-3 pr-4 text-[var(--color-primary-text)]/80">{p.price}</td>
+                                                    <td className="py-3 pr-4 text-[var(--color-primary-text)]/80">{p.tone}</td>
+                                                    <td className="py-3 pr-4 text-[var(--color-primary-text)]/80">{p.tag ?? "—"}</td>
+                                                    <td className="py-3 pr-4 text-[var(--color-primary-text)]/60">{formatDate(p.updatedAt)}</td>
                                                     <td className="py-3 text-right">
                                                         <div className="flex justify-end gap-2">
                                                             <Button
@@ -481,7 +481,7 @@ export default function AdminProductPage() {
 
                                             {!loading && products.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={6} className="py-6 text-center text-white/60">
+                                                    <td colSpan={6} className="py-6 text-center text-[var(--color-primary-text)]/60">
                                                         No products found.
                                                     </td>
                                                 </tr>
@@ -491,7 +491,7 @@ export default function AdminProductPage() {
                                 </div>
 
                                 <div className="mt-5 flex items-center justify-between">
-                                    <p className="text-xs text-white/55">
+                                    <p className="text-xs text-[var(--color-primary-text)]/55">
                                         Showing {products.length} item(s)
                                     </p>
                                     <div className="flex gap-3">
@@ -516,11 +516,11 @@ export default function AdminProductPage() {
                             </div>
 
                             {editing ? (
-                                <div className="mt-8 rounded-3xl bg-white/5 p-5 ring-1 ring-white/10">
+                                <div className="mt-8 rounded-3xl bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] p-5 ring-1 ring-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)]">
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
                                             <p className="text-sm font-semibold">Edit product</p>
-                                            <p className="mt-1 text-xs text-white/55">ID: {editing.id}</p>
+                                            <p className="mt-1 text-xs text-[var(--color-primary-text)]/55">ID: {editing.id}</p>
                                         </div>
 
                                         <div className="flex gap-3">
