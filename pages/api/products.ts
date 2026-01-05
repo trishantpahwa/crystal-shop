@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 
 type SortBy = "createdAt" | "updatedAt" | "name" | "price" | "tone";
 const SORT_FIELDS: ReadonlyArray<SortBy> = [

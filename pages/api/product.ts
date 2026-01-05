@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
-import authorize from "@/config/auth.config";
 import authorizeAdmin from "@/config/admin-auth.config";
 
 export default async function handler(
