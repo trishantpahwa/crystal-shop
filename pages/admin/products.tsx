@@ -260,9 +260,26 @@ export default function AdminProductPage() {
                 <header className="border-b border-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)] bg-[var(--color-primary-bg)]/70 backdrop-blur">
                     <Container>
                         <div className="flex h-16 items-center justify-between">
-                            <p className="text-sm font-semibold tracking-tight">Admin</p>
-                            <Button variant="secondary" type="button" onClick={() => router.push("/")}
-                            >
+                            <div className="flex items-center gap-4">
+                                <p className="text-sm font-semibold tracking-tight">Admin</p>
+                                <nav className="flex gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => router.push("/admin/products")}
+                                        className={router.pathname === "/admin/products" ? "bg-accent-bg" : ""}
+                                    >
+                                        Products
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => router.push("/admin/orders")}
+                                        className={router.pathname === "/admin/orders" ? "bg-accent-bg" : ""}
+                                    >
+                                        Orders
+                                    </Button>
+                                </nav>
+                            </div>
+                            <Button variant="secondary" type="button" onClick={() => router.push("/")}>
                                 Back to shop
                             </Button>
                         </div>
