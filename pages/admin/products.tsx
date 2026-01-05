@@ -99,6 +99,14 @@ export default function AdminProductPage() {
     });
 
     const [editing, setEditing] = useState<Product | null>(null);
+    const [editForm, setEditForm] = useState<ProductInput>({
+        name: "",
+        subtitle: "",
+        price: "",
+        tag: "",
+        images: [],
+        tone: "",
+    });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFiles = async (files: FileList) => {

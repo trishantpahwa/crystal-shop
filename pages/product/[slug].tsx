@@ -123,17 +123,17 @@ export default function ProductPage() {
                                 <div className="relative">
                                     <div className="overflow-hidden rounded-[40px] bg-secondary-bg ring-1 ring-border">
                                         <Image
-                                            src={(product as Product).images?.[selectedImage]?.src || ""}
-                                            alt={(product as Product).images?.[selectedImage]?.alt || product.name}
+                                            src={((product as Product).images as { src: string; alt: string }[])?.[selectedImage]?.src || ""}
+                                            alt={((product as Product).images as { src: string; alt: string }[])?.[selectedImage]?.alt || product.name}
                                             width={500}
                                             height={500}
                                             className="w-full h-auto"
                                         />
                                     </div>
                                 </div>
-                                {(product as Product).images?.length > 1 && (
+                                {((product as Product).images as { src: string; alt: string }[])?.length > 1 && (
                                     <div className="mt-4 flex gap-2 overflow-x-auto">
-                                        {(product as Product).images.map((img: { src: string; alt: string }, index: number) => (
+                                        {((product as Product).images as { src: string; alt: string }[]).map((img: { src: string; alt: string }, index: number) => (
                                             <button
                                                 key={index}
                                                 onClick={() => setSelectedImage(index)}

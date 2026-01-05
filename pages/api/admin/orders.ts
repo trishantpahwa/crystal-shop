@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
 import authorizeAdmin from "@/config/admin-auth.config";
+import { OrderStatus } from "@/generated/prisma/client";
 
 export default async function handler(
     request: NextApiRequest,
@@ -28,9 +29,9 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
     const { status, skip = "0", take = "50" } = request.query;
 
     try {
-        const where: { status?: string } = {};
+        const where: { status?: OrderStatus } = {};
         if (status && status !== "all") {
-            where.status = status as string;
+            where.status = status as OrderStatus;
         }
 
         const orders = await prisma.order.findMany({
@@ -61,9 +62,20 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
                 ...item,
                 product: {
                     ...item.product,
-                    imageSrc: item.product.images?.[0]?.src || "",
+                    imageSrc:
+                        (
+                            item.product.images as {
+                                src: string;
+                                alt: string;
+                            }[]
+                        )?.[0]?.src || "",
                     imageAlt:
-                        item.product.images?.[0]?.alt || item.product.name,
+                        (
+                            item.product.images as {
+                                src: string;
+                                alt: string;
+                            }[]
+                        )?.[0]?.alt || item.product.name,
                 },
             })),
         }));

@@ -320,11 +320,10 @@ export default function AdminOrdersPage() {
                                                     className="flex items-center gap-3 p-3 bg-primary-bg rounded-lg"
                                                 >
                                                     <div className="relative w-12 h-12 flex-shrink-0">
-                                                        <Image
+                                                        <img
                                                             src={item.product.imageSrc}
                                                             alt={item.product.imageAlt}
-                                                            fill
-                                                            className="object-cover rounded"
+                                                            className="w-full h-full object-cover rounded"
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
