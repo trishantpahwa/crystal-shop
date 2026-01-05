@@ -7,15 +7,39 @@ export default async function handler(
     response: NextApiResponse
 ) {
     switch (request.method) {
+        case "GET":
+            return GET(request, response);
         case "PATCH":
             return PATCH(request, response);
         case "DELETE":
             return DELETE(request, response);
         default:
-            response.setHeader("Allow", ["PATCH", "DELETE"]);
+            response.setHeader("Allow", ["GET", "PATCH", "DELETE"]);
             return response
                 .status(405)
                 .end(`Method ${request.method} Not Allowed`);
+    }
+}
+
+async function GET(request: NextApiRequest, response: NextApiResponse) {
+    try {
+        const productId = Number(request.query.slug);
+        if (!productId) {
+            return response.status(400).json({ error: "Invalid product id" });
+        }
+
+        const product = await prisma.product.findUnique({
+            where: { id: productId },
+        });
+
+        if (!product) {
+            return response.status(404).json({ error: "Product not found" });
+        }
+
+        return response.status(200).json({ product });
+    } catch (error) {
+        console.error("Error fetching product:", error);
+        return response.status(500).json({ error: "Internal Server Error" });
     }
 }
 
