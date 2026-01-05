@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 import { upload as vercelUpload } from "@vercel/blob/client";
@@ -98,14 +98,57 @@ export default function AdminProductPage() {
     });
 
     const [editing, setEditing] = useState<Product | null>(null);
-    const [editForm, setEditForm] = useState<ProductInput>({
-        name: "",
-        subtitle: "",
-        price: "",
-        tag: "",
-        images: [],
-        tone: "",
-    });
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFiles = async (files: FileList) => {
+        const fileArray = Array.from(files);
+        for (const f of fileArray) {
+            const url = await handleFileUpload(f);
+            if (url) {
+                setCreateForm((s) => ({
+                    ...s,
+                    images: [...s.images, { src: url, alt: f.name }]
+                }));
+            }
+        }
+    };
+
+    const moveImage = (index: number, direction: 'up' | 'down') => {
+        setCreateForm((s) => {
+            const images = [...s.images];
+            if (direction === 'up' && index > 0) {
+                [images[index - 1], images[index]] = [images[index], images[index - 1]];
+            } else if (direction === 'down' && index < images.length - 1) {
+                [images[index], images[index + 1]] = [images[index + 1], images[index]];
+            }
+            return { ...s, images };
+        });
+    };
+
+    const handleEditFiles = async (files: FileList) => {
+        const fileArray = Array.from(files);
+        for (const f of fileArray) {
+            const url = await handleFileUpload(f);
+            if (url) {
+                setEditForm((s) => ({
+                    ...s,
+                    images: [...s.images, { src: url, alt: f.name }]
+                }));
+            }
+        }
+    };
+
+    const moveEditImage = (index: number, direction: 'up' | 'down') => {
+        setEditForm((s) => {
+            const images = [...s.images];
+            if (direction === 'up' && index > 0) {
+                [images[index - 1], images[index]] = [images[index], images[index - 1]];
+            } else if (direction === 'down' && index < images.length - 1) {
+                [images[index], images[index + 1]] = [images[index + 1], images[index]];
+            }
+            return { ...s, images };
+        });
+    };
 
     const hasPrev = skip > 0;
     const hasNext = products.length === take;
@@ -347,7 +390,8 @@ export default function AdminProductPage() {
                                         <p className="text-xs text-[color-mix(in srgb, var(--color-primary-text) 60%, transparent)] mb-2">Images</p>
                                         <div className="space-y-2">
                                             {createForm.images.map((img, index) => (
-                                                <div key={index} className="flex items-center gap-2">
+                                                <div key={index} className="flex items-center gap-3 p-2 bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] rounded-lg">
+                                                    <img src={img.src} alt={img.alt} className="w-16 h-16 object-cover rounded" />
                                                     <input
                                                         className={inputClassName + " flex-1"}
                                                         placeholder="Image alt"
@@ -357,35 +401,56 @@ export default function AdminProductPage() {
                                                             images: s.images.map((i, idx) => idx === index ? { ...i, alt: e.target.value } : i)
                                                         }))}
                                                     />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setCreateForm((s) => ({
-                                                            ...s,
-                                                            images: s.images.filter((_, idx) => idx !== index)
-                                                        }))}
-                                                        className="text-red-500 hover:text-red-700"
-                                                    >
-                                                        Remove
-                                                    </button>
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => moveImage(index, 'up')}
+                                                            disabled={index === 0}
+                                                            className="px-2 py-1 text-xs bg-gray-200 rounded disabled:opacity-50"
+                                                        >
+                                                            ↑
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => moveImage(index, 'down')}
+                                                            disabled={index === createForm.images.length - 1}
+                                                            className="px-2 py-1 text-xs bg-gray-200 rounded disabled:opacity-50"
+                                                        >
+                                                            ↓
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setCreateForm((s) => ({
+                                                                ...s,
+                                                                images: s.images.filter((_, idx) => idx !== index)
+                                                            }))}
+                                                            className="px-2 py-1 text-xs bg-red-200 text-red-700 rounded hover:bg-red-300"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
+                                            <div
+                                                className="border-2 border-dashed border-[color-mix(in srgb, var(--color-primary-text) 20%, transparent)] rounded-lg p-4 text-center cursor-pointer hover:border-[color-mix(in srgb, var(--color-primary-text) 40%, transparent)] transition-colors"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                onDragOver={(e) => e.preventDefault()}
+                                                onDrop={(e) => {
+                                                    e.preventDefault();
+                                                    handleFiles(e.dataTransfer.files);
+                                                }}
+                                            >
+                                                <p className="text-sm text-[color-mix(in srgb, var(--color-primary-text) 60%, transparent)]">
+                                                    Drop images here or click to select
+                                                </p>
+                                            </div>
                                             <input
-                                                className={inputClassName}
+                                                ref={fileInputRef}
                                                 type="file"
                                                 accept="image/*"
                                                 multiple
-                                                onChange={async (e) => {
-                                                    const files = Array.from(e.target.files || []);
-                                                    for (const f of files) {
-                                                        const url = await handleFileUpload(f);
-                                                        if (url) {
-                                                            setCreateForm((s) => ({
-                                                                ...s,
-                                                                images: [...s.images, { src: url, alt: f.name }]
-                                                            }));
-                                                        }
-                                                    }
-                                                }}
+                                                className="hidden"
+                                                onChange={(e) => handleFiles(e.target.files!)}
                                             />
                                         </div>
                                     </div>
@@ -623,7 +688,8 @@ export default function AdminProductPage() {
                                             <p className="text-xs text-[color-mix(in srgb, var(--color-primary-text) 60%, transparent)] mb-2">Images</p>
                                             <div className="space-y-2">
                                                 {editForm.images.map((img, index) => (
-                                                    <div key={index} className="flex items-center gap-2">
+                                                    <div key={index} className="flex items-center gap-3 p-2 bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] rounded-lg">
+                                                        <img src={img.src} alt={img.alt} className="w-16 h-16 object-cover rounded" />
                                                         <input
                                                             className={inputClassName + " flex-1"}
                                                             placeholder="Image alt"
@@ -633,35 +699,56 @@ export default function AdminProductPage() {
                                                                 images: s.images.map((i, idx) => idx === index ? { ...i, alt: e.target.value } : i)
                                                             }))}
                                                         />
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setEditForm((s) => ({
-                                                                ...s,
-                                                                images: s.images.filter((_, idx) => idx !== index)
-                                                            }))}
-                                                            className="text-red-500 hover:text-red-700"
-                                                        >
-                                                            Remove
-                                                        </button>
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => moveEditImage(index, 'up')}
+                                                                disabled={index === 0}
+                                                                className="px-2 py-1 text-xs bg-gray-200 rounded disabled:opacity-50"
+                                                            >
+                                                                ↑
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => moveEditImage(index, 'down')}
+                                                                disabled={index === editForm.images.length - 1}
+                                                                className="px-2 py-1 text-xs bg-gray-200 rounded disabled:opacity-50"
+                                                            >
+                                                                ↓
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setEditForm((s) => ({
+                                                                    ...s,
+                                                                    images: s.images.filter((_, idx) => idx !== index)
+                                                                }))}
+                                                                className="px-2 py-1 text-xs bg-red-200 text-red-700 rounded hover:bg-red-300"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
+                                                <div
+                                                    className="border-2 border-dashed border-[color-mix(in srgb, var(--color-primary-text) 20%, transparent)] rounded-lg p-4 text-center cursor-pointer hover:border-[color-mix(in srgb, var(--color-primary-text) 40%, transparent)] transition-colors"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    onDragOver={(e) => e.preventDefault()}
+                                                    onDrop={(e) => {
+                                                        e.preventDefault();
+                                                        handleEditFiles(e.dataTransfer.files);
+                                                    }}
+                                                >
+                                                    <p className="text-sm text-[color-mix(in srgb, var(--color-primary-text) 60%, transparent)]">
+                                                        Drop images here or click to select
+                                                    </p>
+                                                </div>
                                                 <input
-                                                    className={inputClassName}
+                                                    ref={fileInputRef}
                                                     type="file"
                                                     accept="image/*"
                                                     multiple
-                                                    onChange={async (e) => {
-                                                        const files = Array.from(e.target.files || []);
-                                                        for (const f of files) {
-                                                            const url = await handleFileUpload(f);
-                                                            if (url) {
-                                                                setEditForm((s) => ({
-                                                                    ...s,
-                                                                    images: [...s.images, { src: url, alt: f.name }]
-                                                                }));
-                                                            }
-                                                        }
-                                                    }}
+                                                    className="hidden"
+                                                    onChange={(e) => handleEditFiles(e.target.files!)}
                                                 />
                                             </div>
                                         </div>
