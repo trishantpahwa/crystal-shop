@@ -8,7 +8,6 @@ import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { Divider } from "@/components/Divider";
 import { SectionTitle } from "@/components/SectionTitle";
-import { useAuth } from "@/providers/AuthProvider";
 
 type SortBy = "createdAt" | "updatedAt" | "name" | "price" | "tone" | "tag";
 
@@ -70,7 +69,6 @@ function buildProductsUrl(params: {
 
 export default function AdminProductPage() {
     const router = useRouter();
-    const { isAuthenticated, loading: authLoading, token } = useAuth();
 
     const [q, setQ] = useState("");
     const [tag, setTag] = useState("");
@@ -129,17 +127,10 @@ export default function AdminProductPage() {
     }, [q, tag, tone, sortBy, order, skip, take]);
 
     useEffect(() => {
-        if (authLoading) return;
-        if (!isAuthenticated) return;
         loadProducts();
-    }, [authLoading, isAuthenticated, loadProducts]);
+    }, [loadProducts]);
 
     const onCreate = async () => {
-        if (!token) {
-            toast.error("Unauthorized");
-            return;
-        }
-
         try {
             const response = await fetch("/api/product", {
                 method: "PUT",
@@ -190,10 +181,6 @@ export default function AdminProductPage() {
 
     const onSaveEdit = async () => {
         if (!editing) return;
-        if (!token) {
-            toast.error("Unauthorized");
-            return;
-        }
 
         try {
             const response = await fetch(`/api/product/${editing.id}`, {
@@ -218,10 +205,6 @@ export default function AdminProductPage() {
     };
 
     const onDelete = async (product: Product) => {
-        if (!token) {
-            toast.error("Unauthorized");
-            return;
-        }
 
         if (!window.confirm(`Delete “${product.name}”?`)) return;
 
@@ -229,7 +212,6 @@ export default function AdminProductPage() {
             const response = await fetch(`/api/product/${product.id}`, {
                 method: "DELETE",
                 headers: {
-                    Authorization: `Bearer ${token}`,
                     "x-api-key": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "" // Temporary fix for authentication => @trishantpahwa | 2026-01-05 15:25:13
                 },
             });
@@ -267,39 +249,6 @@ export default function AdminProductPage() {
             return "";
         }
     };
-
-    if (authLoading) {
-        return (
-            <div className="min-h-screen bg-slate-950 text-white">
-                <Container>
-                    <div className="py-10">
-                        <SectionTitle title="Admin — Products" subtitle="Loading…" />
-                    </div>
-                </Container>
-            </div>
-        );
-    }
-
-    if (!isAuthenticated) {
-        return (
-            <div className="min-h-screen bg-slate-950 text-white">
-                <Container>
-                    <div className="py-10">
-                        <SectionTitle
-                            title="Admin — Products"
-                            subtitle="You need to be signed in to manage products."
-                        />
-                        <div className="mt-6 flex gap-3">
-                            <Button variant="secondary" type="button" onClick={() => router.push("/")}
-                            >
-                                Go to home
-                            </Button>
-                        </div>
-                    </div>
-                </Container>
-            </div>
-        );
-    }
 
     return (
         <>
