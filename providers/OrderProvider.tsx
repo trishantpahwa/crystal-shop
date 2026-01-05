@@ -1,6 +1,32 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { useAuth } from "./AuthProvider";
 
+interface RawOrderItem {
+    id: number;
+    productId: number;
+    quantity: number;
+    price: string;
+    product: {
+        id: number;
+        name: string;
+        subtitle: string;
+        price: string;
+        tone: string;
+        images: { src: string; alt: string }[];
+    };
+}
+
+interface RawOrder {
+    id: number;
+    userId: number;
+    total: string;
+    status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+    shippingAddress: string;
+    createdAt: string;
+    updatedAt: string;
+    items: RawOrderItem[];
+}
+
 export interface OrderItem {
     id: number;
     productId: number;
@@ -57,8 +83,19 @@ export function OrderProvider({ children }: { children: ReactNode }) {
             });
 
             if (response.ok) {
-                const data = await response.json();
-                setOrders(data);
+                const data = await response.json() as RawOrder[];
+                const transformedOrders = data.map((order) => ({
+                    ...order,
+                    items: order.items.map((item) => ({
+                        ...item,
+                        product: {
+                            ...item.product,
+                            imageSrc: (item.product.images as {src: string, alt: string}[])?.[0]?.src || "",
+                            imageAlt: (item.product.images as {src: string, alt: string}[])?.[0]?.alt || item.product.name,
+                        },
+                    })),
+                }));
+                setOrders(transformedOrders);
             } else {
                 console.error("Failed to fetch orders");
                 setOrders([]);

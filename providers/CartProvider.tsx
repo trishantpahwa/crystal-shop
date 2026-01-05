@@ -1,6 +1,20 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { useAuth } from "./AuthProvider";
 
+interface RawCartItem {
+    id: number;
+    productId: number;
+    quantity: number;
+    product: {
+        id: number;
+        name: string;
+        subtitle: string;
+        price: string;
+        tone: string;
+        images: { src: string; alt: string }[];
+    };
+}
+
 export interface CartItem {
     id: number;
     productId: number;
@@ -50,8 +64,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
             });
 
             if (response.ok) {
-                const data = await response.json();
-                setItems(data.items || []);
+                const data = await response.json() as { items: RawCartItem[]; total: string };
+                const transformedItems = data.items.map((item) => ({
+                    ...item,
+                    product: {
+                        ...item.product,
+                        imageSrc: (item.product.images as {src: string, alt: string}[])?.[0]?.src || "",
+                        imageAlt: (item.product.images as {src: string, alt: string}[])?.[0]?.alt || item.product.name,
+                    },
+                }));
+                setItems(transformedItems);
                 setTotal(data.total || "0.00");
             } else {
                 console.error("Failed to fetch cart");

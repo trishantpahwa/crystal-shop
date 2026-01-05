@@ -25,10 +25,16 @@ async function PUT(request: NextApiRequest, response: NextApiResponse) {
         if (!userID) {
             return response.status(401).json({ error: "Unauthorized" });
         }
-        const { name, subtitle, price, imageSrc, imageAlt, tone } =
-            request.body;
+        const { name, subtitle, price, images, tone } = request.body;
 
-        if (!name || !price || !imageSrc || !imageAlt || !tone) {
+        if (
+            !name ||
+            !price ||
+            !images ||
+            !Array.isArray(images) ||
+            images.length === 0 ||
+            !tone
+        ) {
             return response
                 .status(400)
                 .json({ error: "Missing required fields" });
@@ -39,9 +45,8 @@ async function PUT(request: NextApiRequest, response: NextApiResponse) {
                 name,
                 subtitle,
                 price,
-                imageSrc,
-                imageAlt,
                 tone,
+                images,
             },
         });
 

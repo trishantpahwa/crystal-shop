@@ -7,15 +7,39 @@ export default async function handler(
     response: NextApiResponse
 ) {
     switch (request.method) {
+        case "GET":
+            return GET(request, response);
         case "PATCH":
             return PATCH(request, response);
         case "DELETE":
             return DELETE(request, response);
         default:
-            response.setHeader("Allow", ["PATCH", "DELETE"]);
+            response.setHeader("Allow", ["GET", "PATCH", "DELETE"]);
             return response
                 .status(405)
                 .end(`Method ${request.method} Not Allowed`);
+    }
+}
+
+async function GET(request: NextApiRequest, response: NextApiResponse) {
+    try {
+        const productId = Number(request.query.slug);
+        if (!productId) {
+            return response.status(400).json({ error: "Invalid product id" });
+        }
+
+        const product = await prisma.product.findUnique({
+            where: { id: productId },
+        });
+
+        if (!product) {
+            return response.status(404).json({ error: "Product not found" });
+        }
+
+        return response.status(200).json({ product });
+    } catch (error) {
+        console.error("Error fetching product:", error);
+        return response.status(500).json({ error: "Internal Server Error" });
     }
 }
 
@@ -33,16 +57,17 @@ async function PATCH(request: NextApiRequest, response: NextApiResponse) {
             return response.status(400).json({ error: "Invalid product id" });
         }
 
-        const { name, subtitle, price, imageSrc, imageAlt, tone } =
-            request.body ?? {};
+        const { name, subtitle, price, images, tone } = request.body ?? {};
 
-        const data: any = {};
+        const data: Record<string, unknown> = {};
         if (typeof name === "string") data.name = name.trim();
         if (typeof subtitle === "string") data.subtitle = subtitle.trim();
         if (typeof price === "string") data.price = price.trim();
-        if (typeof imageSrc === "string") data.imageSrc = imageSrc.trim();
-        if (typeof imageAlt === "string") data.imageAlt = imageAlt.trim();
         if (typeof tone === "string") data.tone = tone.trim();
+
+        if (images && Array.isArray(images)) {
+            data.images = images;
+        }
 
         const updatedProduct = await prisma.product.update({
             where: { id: productId },

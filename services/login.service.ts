@@ -20,7 +20,7 @@ const signInWithGoogle = async () => {
         } else {
             return false;
         }
-    } catch (error) { 
+    } catch {
         return false;
     }
 };

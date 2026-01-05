@@ -47,6 +47,13 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+function scrollToSection(id: string) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth" });
+  }
+}
+
 function NavLink({ children }: { children: string }) {
   return (
     <a
@@ -64,6 +71,7 @@ export default function Home() {
 
   const [signedIn, setSignedIn] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [email, setEmail] = useState("");
 
   const _signInWithGoogle = async () => {
     const signedIn = await signInWithGoogle();
@@ -81,6 +89,14 @@ export default function Home() {
     } catch (error) {
       console.error("Failed to fetch products:", error);
     }
+  };
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    // For now, just show success
+    toast.success("Subscribed successfully!");
+    setEmail("");
   };
 
   useEffect(() => {
@@ -163,14 +179,14 @@ export default function Home() {
                   </p>
 
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <Button type="button" className="w-full sm:w-auto">
+                    <Button type="button" onClick={() => scrollToSection("featured")}>
                       Shop featured
                       <ArrowRightIcon className="ml-2 h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       type="button"
-                      className="w-full sm:w-auto"
+                      onClick={() => scrollToSection("categories")}
                     >
                       Explore categories
                     </Button>
@@ -268,7 +284,7 @@ export default function Home() {
             </Container>
           </section>
 
-          <section className="mt-14 sm:mt-20">
+          <section className="mt-14 sm:mt-20" id="featured">
             <Container>
               <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                 <SectionTitle
@@ -276,7 +292,7 @@ export default function Home() {
                   title="Signature pieces, designed to shimmer"
                   subtitle="Curated crystals with modern settings — sleek enough for everyday, special enough for nights out."
                 />
-                <Button variant="ghost" type="button" className="self-start sm:self-auto">
+                <Button variant="ghost" type="button" href="/products" className="self-start sm:self-auto">
                   View all
                   <ArrowRightIcon className="ml-2 h-4 w-4" />
                 </Button>
@@ -292,7 +308,7 @@ export default function Home() {
 
           <section className="mt-14 sm:mt-20">
             <Container>
-              <div className="rounded-[40px] bg-secondary-bg p-6 ring-1 ring-border sm:p-10">
+              <div className="rounded-[40px] bg-secondary-bg p-6 ring-1 ring-border sm:p-10" id="categories">
                 <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
                   <SectionTitle
                     eyebrow="Shop"
@@ -425,7 +441,7 @@ export default function Home() {
 
                   <form
                     className="w-full max-w-xl"
-                    onSubmit={(e) => e.preventDefault()}
+                    onSubmit={handleNewsletterSubmit}
                   >
                     <div className="flex flex-col gap-3 sm:flex-row">
                       <label className="sr-only" htmlFor="email">
@@ -435,6 +451,8 @@ export default function Home() {
                         id="email"
                         type="email"
                         required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@example.com"
                         className="h-11 w-full rounded-full bg-secondary-bg px-4 text-sm text-primary-text placeholder:text-[color-mix(in srgb, var(--color-primary-text) 40%, transparent)] ring-1 ring-border outline-none transition focus:ring-emerald-500/40"
                       />

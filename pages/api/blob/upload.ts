@@ -27,13 +27,9 @@ export default async function handler(
         const jsonBody = body ? JSON.parse(String(body)) : {};
 
         const jsonResponse = await handleUpload({
-            request: request as any,
+            request: request as unknown as Request,
             body: jsonBody,
-            onBeforeGenerateToken: async (
-                pathname,
-                clientPayload,
-                multipart
-            ) => {
+            onBeforeGenerateToken: async (pathname, clientPayload) => {
                 return {
                     tokenPayload: clientPayload,
                     allowedContentTypes: [
