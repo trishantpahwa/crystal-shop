@@ -51,7 +51,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
             if (response.ok) {
                 const data = await response.json();
-                setItems(data.items || []);
+                const transformedItems = (data.items || []).map((item: any) => ({
+                    ...item,
+                    product: {
+                        ...item.product,
+                        imageSrc: item.product.images?.[0]?.src || "",
+                        imageAlt: item.product.images?.[0]?.alt || item.product.name,
+                    },
+                }));
+                setItems(transformedItems);
                 setTotal(data.total || "0.00");
             } else {
                 console.error("Failed to fetch cart");

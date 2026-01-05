@@ -30,11 +30,6 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
 
         const product = await prisma.product.findUnique({
             where: { id: productId },
-            include: {
-                images: {
-                    orderBy: { order: "asc" },
-                },
-            },
         });
 
         if (!product) {
@@ -71,29 +66,12 @@ async function PATCH(request: NextApiRequest, response: NextApiResponse) {
         if (typeof tone === "string") data.tone = tone.trim();
 
         if (images && Array.isArray(images)) {
-            // Delete existing images and create new ones
-            await prisma.productImage.deleteMany({
-                where: { productId },
-            });
-            data.images = {
-                create: images.map(
-                    (img: { src: string; alt: string }, index: number) => ({
-                        src: img.src,
-                        alt: img.alt,
-                        order: index,
-                    })
-                ),
-            };
+            data.images = images;
         }
 
         const updatedProduct = await prisma.product.update({
             where: { id: productId },
             data,
-            include: {
-                images: {
-                    orderBy: { order: "asc" },
-                },
-            },
         });
 
         return response.status(200).json({ product: updatedProduct });

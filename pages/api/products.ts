@@ -63,11 +63,6 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
             100,
             Math.max(1, Number.parseInt(String(take), 10) || 24)
         ),
-        include: {
-            images: {
-                orderBy: { order: "asc" },
-            },
-        },
     });
 
     return response.status(200).json({ products });

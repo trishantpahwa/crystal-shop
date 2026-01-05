@@ -55,10 +55,23 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
             take: parseInt(take as string),
         });
 
+        const transformedOrders = orders.map((order) => ({
+            ...order,
+            items: order.items.map((item) => ({
+                ...item,
+                product: {
+                    ...item.product,
+                    imageSrc: item.product.images?.[0]?.src || "",
+                    imageAlt:
+                        item.product.images?.[0]?.alt || item.product.name,
+                },
+            })),
+        }));
+
         const total = await prisma.order.count({ where });
 
         return response.status(200).json({
-            orders,
+            orders: transformedOrders,
             total,
             pagination: {
                 skip: parseInt(skip as string),

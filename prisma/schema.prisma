@@ -25,26 +25,16 @@ model User {
 }
 
 model Product {
-  id         Int            @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   name       String
   subtitle   String
   price      String
   tone       String
-  images     ProductImage[]
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  images     Json
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
   cartItems  CartItem[]
   orderItems OrderItem[]
-}
-
-model ProductImage {
-  id        Int      @id @default(autoincrement())
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  src       String
-  alt       String
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
 }
 
 model Cart {

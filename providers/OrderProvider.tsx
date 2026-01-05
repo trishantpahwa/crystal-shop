@@ -58,7 +58,18 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
             if (response.ok) {
                 const data = await response.json();
-                setOrders(data);
+                const transformedOrders = data.map((order: any) => ({
+                    ...order,
+                    items: order.items.map((item: any) => ({
+                        ...item,
+                        product: {
+                            ...item.product,
+                            imageSrc: item.product.images?.[0]?.src || "",
+                            imageAlt: item.product.images?.[0]?.alt || item.product.name,
+                        },
+                    })),
+                }));
+                setOrders(transformedOrders);
             } else {
                 console.error("Failed to fetch orders");
                 setOrders([]);

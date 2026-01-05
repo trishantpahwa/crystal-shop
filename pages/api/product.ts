@@ -46,18 +46,7 @@ async function PUT(request: NextApiRequest, response: NextApiResponse) {
                 subtitle,
                 price,
                 tone,
-                images: {
-                    create: images.map(
-                        (img: { src: string; alt: string }, index: number) => ({
-                            src: img.src,
-                            alt: img.alt,
-                            order: index,
-                        })
-                    ),
-                },
-            },
-            include: {
-                images: true,
+                images,
             },
         });
 

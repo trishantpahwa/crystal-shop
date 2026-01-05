@@ -18,7 +18,7 @@ function CardChrome({ children }: { children: ReactNode }) {
     );
 }
 
-export function ProductCard({ product }: { product: Product & { images?: Array<{ src: string; alt: string }> } }) {
+export function ProductCard({ product }: { product: Product }) {
     const { addToCart, loading } = useCart();
 
     const handleAddToCart = async () => {
@@ -52,8 +52,8 @@ export function ProductCard({ product }: { product: Product & { images?: Array<{
                         <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
                             <div className="relative aspect-[4/3] w-full">
                                 <Image
-                                    src={product.images?.[0]?.src || ""}
-                                    alt={product.images?.[0]?.alt || product.name}
+                                    src={(product.images as {src: string, alt: string}[])?.[0]?.src || ""}
+                                    alt={(product.images as {src: string, alt: string}[])?.[0]?.alt || product.name}
                                     fill
                                     sizes="(min-width: 1024px) 260px, (min-width: 640px) 45vw, 90vw"
                                     className="object-cover transition duration-500 group-hover:scale-105"
