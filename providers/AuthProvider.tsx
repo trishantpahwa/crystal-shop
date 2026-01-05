@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // Initial client-side hydration check
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTokens(readTokensFromLocalStorage());
         setLoading(false);
 
