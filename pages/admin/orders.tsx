@@ -69,7 +69,7 @@ export default function AdminOrdersPage() {
     const router = useRouter();
 
     const [status, setStatus] = useState<OrderStatus | "all">("all");
-    const [skip, setSkip] = useState(0);
+    const skip = 0;
     const take = 50;
 
     const [orders, setOrders] = useState<Order[]>([]);
