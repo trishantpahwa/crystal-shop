@@ -30,6 +30,11 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
 
         const product = await prisma.product.findUnique({
             where: { id: productId },
+            include: {
+                images: {
+                    orderBy: { order: "asc" },
+                },
+            },
         });
 
         if (!product) {
@@ -57,20 +62,38 @@ async function PATCH(request: NextApiRequest, response: NextApiResponse) {
             return response.status(400).json({ error: "Invalid product id" });
         }
 
-        const { name, subtitle, price, imageSrc, imageAlt, tone } =
-            request.body ?? {};
+        const { name, subtitle, price, images, tone } = request.body ?? {};
 
         const data: any = {};
         if (typeof name === "string") data.name = name.trim();
         if (typeof subtitle === "string") data.subtitle = subtitle.trim();
         if (typeof price === "string") data.price = price.trim();
-        if (typeof imageSrc === "string") data.imageSrc = imageSrc.trim();
-        if (typeof imageAlt === "string") data.imageAlt = imageAlt.trim();
         if (typeof tone === "string") data.tone = tone.trim();
+
+        if (images && Array.isArray(images)) {
+            // Delete existing images and create new ones
+            await prisma.productImage.deleteMany({
+                where: { productId },
+            });
+            data.images = {
+                create: images.map(
+                    (img: { src: string; alt: string }, index: number) => ({
+                        src: img.src,
+                        alt: img.alt,
+                        order: index,
+                    })
+                ),
+            };
+        }
 
         const updatedProduct = await prisma.product.update({
             where: { id: productId },
             data,
+            include: {
+                images: {
+                    orderBy: { order: "asc" },
+                },
+            },
         });
 
         return response.status(200).json({ product: updatedProduct });

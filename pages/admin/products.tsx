@@ -21,9 +21,13 @@ type Product = {
     subtitle: string;
     price: string;
     tag: string | null;
-    imageSrc: string;
-    imageAlt: string;
     tone: Tone;
+    images: Array<{
+        id: number;
+        src: string;
+        alt: string;
+        order: number;
+    }>;
     createdAt: string;
     updatedAt: string;
 };
@@ -33,8 +37,10 @@ type ProductInput = {
     subtitle: string;
     price: string;
     tag: string;
-    imageSrc: string;
-    imageAlt: string;
+    images: Array<{
+        src: string;
+        alt: string;
+    }>;
     tone: Tone | "";
 };
 
@@ -87,8 +93,7 @@ export default function AdminProductPage() {
         subtitle: "",
         price: "",
         tag: "",
-        imageSrc: "",
-        imageAlt: "",
+        images: [],
         tone: "",
     });
 
@@ -98,8 +103,7 @@ export default function AdminProductPage() {
         subtitle: "",
         price: "",
         tag: "",
-        imageSrc: "",
-        imageAlt: "",
+        images: [],
         tone: "",
     });
 
@@ -151,8 +155,7 @@ export default function AdminProductPage() {
                 subtitle: "",
                 price: "",
                 tag: "",
-                imageSrc: "",
-                imageAlt: "",
+                images: [],
                 tone: "",
             });
             setSkip(0);
@@ -169,8 +172,7 @@ export default function AdminProductPage() {
             subtitle: product.subtitle,
             price: product.price,
             tag: product.tag ?? "",
-            imageSrc: product.imageSrc,
-            imageAlt: product.imageAlt,
+            images: product.images.map(img => ({ src: img.src, alt: img.alt })),
             tone: product.tone,
         });
     };
@@ -233,8 +235,7 @@ export default function AdminProductPage() {
             createForm.name.trim() &&
             createForm.subtitle.trim() &&
             Number(createForm.price) &&
-            createForm.imageSrc.trim() &&
-            createForm.imageAlt.trim() &&
+            createForm.images.length > 0 &&
             createForm.tone.trim()
         );
     }, [createForm]);
@@ -342,23 +343,52 @@ export default function AdminProductPage() {
                                         value={createForm.tag}
                                         onChange={(e) => setCreateForm((s) => ({ ...s, tag: e.target.value }))}
                                     />
-                                    <input
-                                        className={inputClassName}
-                                        placeholder="Image alt"
-                                        value={createForm.imageAlt}
-                                        onChange={(e) => setCreateForm((s) => ({ ...s, imageAlt: e.target.value }))}
-                                    />
-                                    <input
-                                        className={inputClassName + " sm:col-span-2"}
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={async (e) => {
-                                            const f = e.target.files?.[0];
-                                            if (!f) return;
-                                            const url = await handleFileUpload(f);
-                                            if (url) setCreateForm((s) => ({ ...s, imageSrc: url }));
-                                        }}
-                                    />
+                                    <div className="sm:col-span-2">
+                                        <p className="text-xs text-[color-mix(in srgb, var(--color-primary-text) 60%, transparent)] mb-2">Images</p>
+                                        <div className="space-y-2">
+                                            {createForm.images.map((img, index) => (
+                                                <div key={index} className="flex items-center gap-2">
+                                                    <input
+                                                        className={inputClassName + " flex-1"}
+                                                        placeholder="Image alt"
+                                                        value={img.alt}
+                                                        onChange={(e) => setCreateForm((s) => ({
+                                                            ...s,
+                                                            images: s.images.map((i, idx) => idx === index ? { ...i, alt: e.target.value } : i)
+                                                        }))}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setCreateForm((s) => ({
+                                                            ...s,
+                                                            images: s.images.filter((_, idx) => idx !== index)
+                                                        }))}
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <input
+                                                className={inputClassName}
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={async (e) => {
+                                                    const files = Array.from(e.target.files || []);
+                                                    for (const f of files) {
+                                                        const url = await handleFileUpload(f);
+                                                        if (url) {
+                                                            setCreateForm((s) => ({
+                                                                ...s,
+                                                                images: [...s.images, { src: url, alt: f.name }]
+                                                            }));
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -589,23 +619,52 @@ export default function AdminProductPage() {
                                             value={editForm.tag}
                                             onChange={(e) => setEditForm((s) => ({ ...s, tag: e.target.value }))}
                                         />
-                                        <input
-                                            className={inputClassName}
-                                            placeholder="Image alt"
-                                            value={editForm.imageAlt}
-                                            onChange={(e) => setEditForm((s) => ({ ...s, imageAlt: e.target.value }))}
-                                        />
-                                        <input
-                                            className={inputClassName + " sm:col-span-2"}
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={async (e) => {
-                                                const f = e.target.files?.[0];
-                                                if (!f) return;
-                                                const url = await handleFileUpload(f);
-                                                if (url) setEditForm((s) => ({ ...s, imageSrc: url }));
-                                            }}
-                                        />
+                                        <div className="sm:col-span-2">
+                                            <p className="text-xs text-[color-mix(in srgb, var(--color-primary-text) 60%, transparent)] mb-2">Images</p>
+                                            <div className="space-y-2">
+                                                {editForm.images.map((img, index) => (
+                                                    <div key={index} className="flex items-center gap-2">
+                                                        <input
+                                                            className={inputClassName + " flex-1"}
+                                                            placeholder="Image alt"
+                                                            value={img.alt}
+                                                            onChange={(e) => setEditForm((s) => ({
+                                                                ...s,
+                                                                images: s.images.map((i, idx) => idx === index ? { ...i, alt: e.target.value } : i)
+                                                            }))}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setEditForm((s) => ({
+                                                                ...s,
+                                                                images: s.images.filter((_, idx) => idx !== index)
+                                                            }))}
+                                                            className="text-red-500 hover:text-red-700"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <input
+                                                    className={inputClassName}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    onChange={async (e) => {
+                                                        const files = Array.from(e.target.files || []);
+                                                        for (const f of files) {
+                                                            const url = await handleFileUpload(f);
+                                                            if (url) {
+                                                                setEditForm((s) => ({
+                                                                    ...s,
+                                                                    images: [...s.images, { src: url, alt: f.name }]
+                                                                }));
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ) : null}

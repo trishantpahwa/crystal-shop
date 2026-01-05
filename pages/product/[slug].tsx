@@ -20,6 +20,7 @@ export default function ProductPage() {
 
     const [product, setProduct] = useState<Product | null>(null);
     const [loadingProduct, setLoadingProduct] = useState(true);
+    const [selectedImage, setSelectedImage] = useState(0);
 
     useEffect(() => {
         if (!slug) return;
@@ -118,16 +119,38 @@ export default function ProductPage() {
                         </div>
 
                         <div className="grid items-center gap-10 lg:grid-cols-2">
-                            <div className="relative">
-                                <div className="overflow-hidden rounded-[40px] bg-secondary-bg ring-1 ring-border">
-                                    <Image
-                                        src={product.imageSrc}
-                                        alt={product.imageAlt}
-                                        width={500}
-                                        height={500}
-                                        className="w-full h-auto"
-                                    />
+                            <div>
+                                <div className="relative">
+                                    <div className="overflow-hidden rounded-[40px] bg-secondary-bg ring-1 ring-border">
+                                        <Image
+                                            src={(product as any).images?.[selectedImage]?.src || ""}
+                                            alt={(product as any).images?.[selectedImage]?.alt || product.name}
+                                            width={500}
+                                            height={500}
+                                            className="w-full h-auto"
+                                        />
+                                    </div>
                                 </div>
+                                {(product as any).images?.length > 1 && (
+                                    <div className="mt-4 flex gap-2 overflow-x-auto">
+                                        {(product as any).images.map((img: any, index: number) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => setSelectedImage(index)}
+                                                className={`flex-shrink-0 overflow-hidden rounded-lg ring-1 ${selectedImage === index ? 'ring-emerald-accent' : 'ring-border'
+                                                    }`}
+                                            >
+                                                <Image
+                                                    src={img.src}
+                                                    alt={img.alt}
+                                                    width={80}
+                                                    height={80}
+                                                    className="w-20 h-20 object-cover"
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div>
