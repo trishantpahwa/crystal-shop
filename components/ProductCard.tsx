@@ -1,33 +1,9 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { useCart } from "@/providers/CartProvider";
+import toast from "react-hot-toast";
+import { Product } from "@/generated/prisma/client";
 
-export type Product = {
-    name: string;
-    subtitle: string;
-    price: string;
-    imageSrc: string;
-    imageAlt: string;
-    tone: "amethyst" | "rose" | "aqua" | "amber";
-};
-
-function cn(...classes: Array<string | false | null | undefined>) {
-    return classes.filter(Boolean).join(" ");
-}
-
-const toneStyles: Record<Product["tone"], { chip: string }> = {
-    amethyst: {
-        chip: "text-violet-200",
-    },
-    rose: {
-        chip: "text-rose-200",
-    },
-    aqua: {
-        chip: "text-cyan-200",
-    },
-    amber: {
-        chip: "text-amber-200",
-    },
-};
 
 function CardChrome({ children }: { children: ReactNode }) {
     return (
@@ -42,7 +18,16 @@ function CardChrome({ children }: { children: ReactNode }) {
 }
 
 export function ProductCard({ product }: { product: Product }) {
-    const t = toneStyles[product.tone];
+    const { addToCart, loading } = useCart();
+
+    const handleAddToCart = async () => {
+        try {
+            await addToCart(product.id);
+            toast.success(`${product.name} added to cart!`);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to add to cart");
+        }
+    };
 
     return (
         <CardChrome>
@@ -60,10 +45,12 @@ export function ProductCard({ product }: { product: Product }) {
                         <p className="text-xl font-semibold text-white">₹ {product.price}</p>
                     </div>
                     <button
-                        className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/10 transition hover:bg-white/15 active:bg-white/10"
+                        onClick={handleAddToCart}
+                        disabled={loading}
+                        className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/10 transition hover:bg-white/15 active:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                         type="button"
                     >
-                        Add to bag
+                        {loading ? "Adding..." : "Add to bag"}
                     </button>
                 </div>
 

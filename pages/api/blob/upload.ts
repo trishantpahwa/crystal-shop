@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
-import authorizeAdmin from "@/config/admin-auth.config";
 
 export const config = {
     api: {

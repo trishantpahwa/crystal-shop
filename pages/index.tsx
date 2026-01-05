@@ -6,12 +6,14 @@ import { Divider } from "@/components/Divider";
 import { FeatureItem } from "@/components/FeatureItem";
 import { ArrowRightIcon, SparkleIcon, StarIcon } from "@/components/Icons";
 import { GemIcon, LeafIcon, ShieldIcon, TruckIcon } from "@/components/MiniIcon";
-import { ProductCard, type Product } from "@/components/ProductCard";
+import { ProductCard } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
 import { useEffect, useState } from "react";
 import { signInWithGoogle } from "@/services/login.service";
 import toast from "react-hot-toast";
+import { useCart } from "@/providers/CartProvider";
 import { useAuth } from "@/providers/AuthProvider";
+import type { Product } from "@/generated/prisma/client";
 
 const categories = [
   { name: "Rings", desc: "Bold facets, perfect fit" },
@@ -58,6 +60,7 @@ function NavLink({ children }: { children: string }) {
 
 export default function Home() {
   const { isAuthenticated, refresh } = useAuth();
+  const { items } = useCart();
 
   const [signedIn, setSignedIn] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
@@ -82,12 +85,11 @@ export default function Home() {
 
   useEffect(() => {
     setSignedIn(isAuthenticated);
-    fetchProducts();
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    setSignedIn(isAuthenticated);
-  }, [isAuthenticated]);
+    fetchProducts();
+  }, []);
 
   return (
     <>
@@ -131,8 +133,8 @@ export default function Home() {
                 >
                   Search
                 </button>
-                {signedIn ? <Button variant="secondary" type="button">
-                  Bag (2)
+                {signedIn ? <Button variant="secondary" type="button" href="/cart">
+                  Bag ({items.length})
                 </Button> : <Button variant="secondary" type="button" onClick={_signInWithGoogle}>
                   Sign In
                 </Button>}
