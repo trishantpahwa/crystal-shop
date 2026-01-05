@@ -1,5 +1,4 @@
 import Head from "next/head";
-import Image from "next/image";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
@@ -9,44 +8,10 @@ import { ArrowRightIcon, SparkleIcon, StarIcon } from "@/components/Icons";
 import { GemIcon, LeafIcon, ShieldIcon, TruckIcon } from "@/components/MiniIcon";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
-
-const featured: Product[] = [
-  {
-    name: "Amethyst Aura Ring",
-    subtitle: "Faceted violet glow set in a clean, modern silhouette.",
-    price: "$68",
-    tag: "Bestseller",
-    imageSrc: "https://mesmerizeindia.com/cdn/shop/files/GleamingHemimorphiteNaturalStoneBraceletWithMagSnap2.jpg?v=1761631765&width=1200",
-    imageAlt: "Two rings with purple gemstones",
-    tone: "amethyst",
-  },
-  {
-    name: "Rose Quartz Pendant",
-    subtitle: "Soft blush crystal made for everyday calm and elegance.",
-    price: "$54",
-    tag: "Giftable",
-    imageSrc: "https://mesmerizeindia.com/cdn/shop/files/RamMicroCarvedInlayGoldTagNecklace1.jpg?v=1763531407&width=1200",
-    imageAlt: "A single crystal on a white surface",
-    tone: "rose",
-  },
-  {
-    name: "Aqua Prism Studs",
-    subtitle: "Bright, minimal studs that catch light from every angle.",
-    price: "$42",
-    tag: "New",
-    imageSrc: "https://mesmerizeindia.com/cdn/shop/files/Spiritual_Rudraksh_Natural_Stone_Pyrite_Om_Bracelet_With_Magsnap2.jpg?v=1760432975&width=1200",
-    imageAlt: "Amethyst earrings on a light surface",
-    tone: "aqua",
-  },
-  {
-    name: "Yada Yada Hi Dharmasya Mahabharat MicroCarved Round Kada",
-    subtitle: "Warm golden tones on a refined chain you can layer.",
-    price: "$76",
-    imageSrc: "https://mesmerizeindia.com/cdn/shop/files/YadaYadaHiDharmasyaMahabharatMicroCarvedRoundKadaGold.jpg?v=1763374585&width=1200",
-    imageAlt: "A close-up of earrings on a book",
-    tone: "amber",
-  },
-];
+import { useEffect, useState } from "react";
+import { signInWithGoogle } from "@/services/login.service";
+import toast from "react-hot-toast";
+import { useAuth } from "@/providers/AuthProvider";
 
 const categories = [
   { name: "Rings", desc: "Bold facets, perfect fit" },
@@ -92,6 +57,38 @@ function NavLink({ children }: { children: string }) {
 }
 
 export default function Home() {
+  const { isAuthenticated, refresh } = useAuth();
+
+  const [signedIn, setSignedIn] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  const _signInWithGoogle = async () => {
+    const signedIn = await signInWithGoogle();
+    if (signedIn) toast.success("Signed in successfully!");
+    else toast.error("Sign in failed. Please try again.");
+    setSignedIn(signedIn);
+    if (signedIn) refresh();
+  }// ; Prettify later => @trishantpahwa | 2025-12-25 00:44:39
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("/api/products");
+      const data = await response.json();
+      if (response.ok) setProducts(data.products);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    }
+  };
+
+  useEffect(() => {
+    setSignedIn(isAuthenticated);
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    setSignedIn(isAuthenticated);
+  }, [isAuthenticated]);
+
   return (
     <>
       <Head>
@@ -134,9 +131,11 @@ export default function Home() {
                 >
                   Search
                 </button>
-                <Button variant="secondary" type="button">
+                {signedIn ? <Button variant="secondary" type="button">
                   Bag (2)
-                </Button>
+                </Button> : <Button variant="secondary" type="button" onClick={_signInWithGoogle}>
+                  Sign In
+                </Button>}
               </div>
             </div>
           </Container>
@@ -218,7 +217,7 @@ export default function Home() {
                           <div className="mt-4 flex items-end justify-between">
                             <div>
                               <p className="text-xs text-white/60">Bundle</p>
-                              <p className="text-2xl font-semibold">$132</p>
+                              <p className="text-2xl font-semibold">₹ 132</p>
                             </div>
                             <button
                               type="button"
@@ -282,7 +281,7 @@ export default function Home() {
               </div>
 
               <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {featured.map((p) => (
+                {products.map((p: Product) => (
                   <ProductCard key={p.name} product={p} />
                 ))}
               </div>
