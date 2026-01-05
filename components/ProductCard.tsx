@@ -39,7 +39,6 @@ export function ProductCard({ product }: { product: Product }) {
                             <p className="truncate text-base font-semibold text-primary-text">{product.name}</p>
                             <p className="mt-1 line-clamp-2 text-sm text-text-subtle">{product.subtitle}</p>
                         </div>
-                    </div>
 
                     <div className="mt-5 grid grid-cols-[1fr_auto] items-end gap-4">
                         <div>

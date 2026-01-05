@@ -107,6 +107,10 @@ export default function Home() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
   return (
     <>
       <Head>
