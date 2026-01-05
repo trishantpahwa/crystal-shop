@@ -12,15 +12,15 @@ export function SectionTitle({
     return (
         <div className="max-w-2xl">
             {eyebrow ? (
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/80">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color-mix(in srgb, var(--color-emerald-accent) 80%, transparent)]">
                     {eyebrow}
                 </p>
             ) : null}
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-primary-text sm:text-3xl">
                 {title}
             </h2>
             {subtitle ? (
-                <p className="mt-3 text-sm leading-6 text-white/65">{subtitle}</p>
+                <p className="mt-3 text-sm leading-6 text-text-subtle">{subtitle}</p>
             ) : null}
         </div>
     );
