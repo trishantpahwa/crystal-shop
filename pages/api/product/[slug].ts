@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
+import authorizeAdmin from "@/config/admin-auth.config";
 
 export default async function handler(
     request: NextApiRequest,
@@ -20,13 +21,13 @@ export default async function handler(
 
 async function PATCH(request: NextApiRequest, response: NextApiResponse) {
     try {
-        // Setup admin authorization later on => @trishantpahwa | 2025-12-26 13:31:29
-        // const token = request.headers.authorization?.split(" ")[1] ?? "";
-        // const userID = authorizeAdmin(token);
+        const token = request.headers["x-api-key"]?.toString() ?? "";
+        const userID = authorizeAdmin(token);
 
-        // if (!userID) {
-        //     return response.status(401).json({ error: "Unauthorized" });
-        // }
+        if (!userID) {
+            return response.status(401).json({ error: "Unauthorized" });
+        }
+
         const productId = Number(request.query.slug);
         if (!productId) {
             return response.status(400).json({ error: "Invalid product id" });
@@ -57,12 +58,12 @@ async function PATCH(request: NextApiRequest, response: NextApiResponse) {
 
 async function DELETE(request: NextApiRequest, response: NextApiResponse) {
     try {
-        // const token = request.headers.authorization?.split(" ")[1] ?? "";
-        // const userID = authorizeAdmin(token);
+        const token = request.headers["x-api-key"]?.toString() ?? "";
+        const userID = authorizeAdmin(token);
 
-        // if (!userID) {
-        //     return response.status(401).json({ error: "Unauthorized" });
-        // }
+        if (!userID) {
+            return response.status(401).json({ error: "Unauthorized" });
+        }
 
         const { slug } = request.query;
 

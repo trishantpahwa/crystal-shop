@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
+import { upload as vercelUpload } from "@vercel/blob/client";
 
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
@@ -67,16 +68,6 @@ function buildProductsUrl(params: {
     return `/api/products?${search.toString()}`;
 }
 
-async function parseJsonOrThrow(response: Response) {
-    const text = await response.text();
-    const data = text ? JSON.parse(text) : null;
-    if (!response.ok) {
-        const message = data?.error || `Request failed (${response.status})`;
-        throw new Error(message);
-    }
-    return data;
-}
-
 export default function AdminProductPage() {
     const router = useRouter();
     const { isAuthenticated, loading: authLoading, token } = useAuth();
@@ -123,7 +114,11 @@ export default function AdminProductPage() {
         try {
             const url = buildProductsUrl({ q, tag, tone, sortBy, order, skip, take });
             const response = await fetch(url);
-            const data = await parseJsonOrThrow(response);
+            const data = await response.json();
+            if (!response.ok) {
+                const errorData = await data;
+                throw new Error(errorData?.message ?? "Failed to load products");
+            }
             setProducts((data?.products ?? []) as Product[]);
         } catch (e) {
             const message = e instanceof Error ? e.message : "Failed to load products";
@@ -150,12 +145,15 @@ export default function AdminProductPage() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
+                    "x-api-key": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "" // Temporary fix for authentication => @trishantpahwa | 2026-01-05 15:24:58
                 },
                 body: JSON.stringify(createForm),
             });
 
-            await parseJsonOrThrow(response);
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data?.message ?? "Failed to create product");
+            }
             toast.success("Product created");
             setCreateForm({
                 name: "",
@@ -202,12 +200,15 @@ export default function AdminProductPage() {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
+                    "x-api-key": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "" // Temporary fix for authentication => @trishantpahwa | 2026-01-05 15:04:54
                 },
                 body: JSON.stringify(editForm),
             });
 
-            await parseJsonOrThrow(response);
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data?.message ?? "Failed to update product");
+            }
             toast.success("Product updated");
             setEditing(null);
             loadProducts();
@@ -229,10 +230,14 @@ export default function AdminProductPage() {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    "x-api-key": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "" // Temporary fix for authentication => @trishantpahwa | 2026-01-05 15:25:13
                 },
             });
 
-            await parseJsonOrThrow(response);
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data?.message ?? "Failed to delete product");
+            }
             toast.success("Product deleted");
             if (editing?.id === product.id) setEditing(null);
             loadProducts();
@@ -245,12 +250,23 @@ export default function AdminProductPage() {
         return (
             createForm.name.trim() &&
             createForm.subtitle.trim() &&
-            createForm.price.trim() &&
+            Number(createForm.price) &&
             createForm.imageSrc.trim() &&
             createForm.imageAlt.trim() &&
             createForm.tone.trim()
         );
     }, [createForm]);
+
+    const handleFileUpload = async (file: File) => {
+        try {
+            const pathname = `products/${Date.now()}`;
+            const result = await vercelUpload(pathname, file, { handleUploadUrl: "/api/blob/upload", access: 'public' });
+            return typeof result === "string" ? result : (result as any)?.url ?? "";
+        } catch (e) {
+            toast.error("Image upload failed");
+            return "";
+        }
+    };
 
     if (authLoading) {
         return (
@@ -368,9 +384,14 @@ export default function AdminProductPage() {
                                     />
                                     <input
                                         className={inputClassName + " sm:col-span-2"}
-                                        placeholder="Image src"
-                                        value={createForm.imageSrc}
-                                        onChange={(e) => setCreateForm((s) => ({ ...s, imageSrc: e.target.value }))}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                            const f = e.target.files?.[0];
+                                            if (!f) return;
+                                            const url = await handleFileUpload(f);
+                                            if (url) setCreateForm((s) => ({ ...s, imageSrc: url }));
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -610,9 +631,14 @@ export default function AdminProductPage() {
                                         />
                                         <input
                                             className={inputClassName + " sm:col-span-2"}
-                                            placeholder="Image src"
-                                            value={editForm.imageSrc}
-                                            onChange={(e) => setEditForm((s) => ({ ...s, imageSrc: e.target.value }))}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                                const f = e.target.files?.[0];
+                                                if (!f) return;
+                                                const url = await handleFileUpload(f);
+                                                if (url) setEditForm((s) => ({ ...s, imageSrc: url }));
+                                            }}
                                         />
                                     </div>
                                 </div>

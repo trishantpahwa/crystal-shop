@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
 import authorize from "@/config/auth.config";
+import authorizeAdmin from "@/config/admin-auth.config";
 
 export default async function handler(
     request: NextApiRequest,
@@ -19,13 +20,12 @@ export default async function handler(
 
 async function PUT(request: NextApiRequest, response: NextApiResponse) {
     try {
-        // Setup admin authorization later on => @trishantpahwa | 2025-12-26 13:31:18
-        // const token = request.headers.authorization?.split(" ")[1] ?? "";
-        // const userID = authorizeAdmin(token);
+        const token = request.headers["x-api-key"]?.toString() ?? "";
+        const userID = authorizeAdmin(token);
 
-        // if (!userID) {
-        //     return response.status(401).json({ error: "Unauthorized" });
-        // }
+        if (!userID) {
+            return response.status(401).json({ error: "Unauthorized" });
+        }
         const { name, subtitle, price, imageSrc, imageAlt, tone } =
             request.body;
 
