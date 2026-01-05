@@ -10,6 +10,63 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom theme colors for Crystal Atelier */
+  --color-primary-bg: #020617;
+  /* slate-950 */
+  --color-primary-text: #ffffff;
+  /* white */
+  --color-secondary-bg: rgba(255, 255, 255, 0.05);
+  /* white/5 */
+  --color-accent-bg: rgba(255, 255, 255, 0.1);
+  /* white/10 */
+  --color-border: rgba(255, 255, 255, 0.1);
+  /* white/10 */
+  --color-text-muted: rgba(255, 255, 255, 0.7);
+  /* white/70 */
+  --color-text-subtle: rgba(255, 255, 255, 0.65);
+  /* white/65 */
+  --color-text-light: rgba(255, 255, 255, 0.8);
+  /* white/80 */
+  --color-text-dim: rgba(255, 255, 255, 0.55);
+  /* white/55 */
+  --color-text-faint: rgba(255, 255, 255, 0.5);
+  /* white/50 */
+  --color-text-very-faint: rgba(255, 255, 255, 0.45);
+  /* white/45 */
+  --color-text-disabled: rgba(255, 255, 255, 0.6);
+  /* white/60 */
+  --color-emerald-accent: #a7f3d0;
+  /* emerald-200 */
+  --color-gradient-start: rgba(16, 185, 129, 0.1);
+  /* emerald-500/10 */
+  --color-gradient-middle: rgba(236, 72, 153, 0.1);
+  /* fuchsia-500/10 */
+  --color-gradient-end: transparent;
+  --color-gradient-hero-start: rgba(52, 211, 153, 0.15);
+  /* emerald-400/15 */
+  --color-gradient-hero-middle: rgba(236, 72, 153, 0.1);
+  /* fuchsia-400/10 */
+  --color-gradient-hero-end: rgba(56, 189, 248, 0.15);
+  /* sky-400/15 */
+
+  /* Button colors */
+  --color-button-primary-bg: #10b981;
+  /* emerald-500 */
+  --color-button-primary-text: #020617;
+  /* slate-950 */
+  --color-button-secondary-bg: rgba(255, 255, 255, 0.1);
+  /* white/10 */
+  --color-button-secondary-text: #ffffff;
+  --color-button-ghost-text: rgba(255, 255, 255, 0.8);
+  /* white/80 */
+  --color-button-ghost-hover: rgba(255, 255, 255, 0.1);
+  /* white/10 */
+  --color-button-outline-text: #10b981;
+  /* emerald-500 */
+  --color-button-outline-ring: #10b981;
+  --color-button-outline-hover: rgba(16, 185, 129, 0.1);
+  /* emerald-500/10 */
 }
 
 @media (prefers-color-scheme: dark) {
