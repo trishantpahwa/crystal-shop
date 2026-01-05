@@ -21,19 +21,21 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   cart        Cart?
+  orders      Order[]
 }
 
 model Product {
-  id        Int        @id @default(autoincrement())
-  name      String
-  subtitle  String
-  price     String
-  imageSrc  String
-  imageAlt  String
-  tone      String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  cartItems CartItem[]
+  id         Int         @id @default(autoincrement())
+  name       String
+  subtitle   String
+  price      String
+  imageSrc   String
+  imageAlt   String
+  tone       String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  cartItems  CartItem[]
+  orderItems OrderItem[]
 }
 
 model Cart {
@@ -56,4 +58,36 @@ model CartItem {
   updatedAt DateTime @updatedAt
 
   @@unique([cartId, productId])
+}
+
+model Order {
+  id              Int         @id @default(autoincrement())
+  userId          Int
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           OrderItem[]
+  total           String
+  status          OrderStatus @default(PENDING)
+  shippingAddress String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  price     String // Price at time of order
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }

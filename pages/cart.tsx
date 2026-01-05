@@ -2,16 +2,23 @@ import Head from "next/head";
 import { Container } from "@/components/Container";
 import { Button } from "@/components/Button";
 import { useCart } from "@/providers/CartProvider";
+import { useOrders } from "@/providers/OrderProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import Image from "next/image";
 import { signInWithGoogle } from "@/services/login.service";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 export default function Cart() {
-    const { items, total, loading, updateQuantity, removeFromCart } = useCart();
+    const { items, total, loading, updateQuantity, removeFromCart, refreshCart } = useCart();
+    const { createOrder } = useOrders();
     const { isAuthenticated } = useAuth();
     const [signingIn, setSigningIn] = useState(false);
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
+    const [showCheckout, setShowCheckout] = useState(false);
+    const [shippingAddress, setShippingAddress] = useState("");
+    const router = useRouter();
 
     const handleSignIn = async () => {
         setSigningIn(true);
@@ -39,6 +46,28 @@ export default function Cart() {
             toast.success("Item removed from cart");
         } catch {
             toast.error("Failed to remove item");
+        }
+    };
+
+    const handleCheckout = async () => {
+        if (!shippingAddress.trim()) {
+            toast.error("Please enter a shipping address");
+            return;
+        }
+
+        setCheckoutLoading(true);
+        try {
+            await createOrder(shippingAddress.trim());
+            await refreshCart(); // Refresh cart to show it's empty
+            toast.success("Order placed successfully!");
+            setShowCheckout(false);
+            setShippingAddress("");
+            router.push("/orders"); // Redirect to orders page
+        } catch (error) {
+            toast.error("Failed to place order");
+            console.error("Checkout error:", error);
+        } finally {
+            setCheckoutLoading(false);
         }
     };
 
@@ -174,7 +203,11 @@ export default function Cart() {
                                             </div>
                                         </div>
 
-                                        <Button className="w-full" disabled={loading}>
+                                        <Button
+                                            className="w-full"
+                                            disabled={loading}
+                                            onClick={() => setShowCheckout(true)}
+                                        >
                                             Proceed to Checkout
                                         </Button>
                                     </div>
@@ -183,6 +216,58 @@ export default function Cart() {
                         )}
                     </div>
                 </Container>
+
+                {/* Checkout Modal */}
+                {showCheckout && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div className="bg-secondary-bg rounded-2xl p-6 max-w-md w-full ring-1 ring-border">
+                            <h2 className="text-xl font-semibold text-primary-text mb-4">
+                                Checkout
+                            </h2>
+
+                            <div className="space-y-4 mb-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-primary-text mb-2">
+                                        Shipping Address
+                                    </label>
+                                    <textarea
+                                        value={shippingAddress}
+                                        onChange={(e) => setShippingAddress(e.target.value)}
+                                        placeholder="Enter your full shipping address..."
+                                        className="w-full px-3 py-2 bg-primary-bg border border-border rounded-lg text-primary-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent-bg"
+                                        rows={4}
+                                        disabled={checkoutLoading}
+                                    />
+                                </div>
+
+                                <div className="border-t border-border pt-4">
+                                    <div className="flex justify-between text-primary-text font-semibold">
+                                        <span>Total</span>
+                                        <span>₹ {total}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={() => setShowCheckout(false)}
+                                    disabled={checkoutLoading}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    className="flex-1"
+                                    onClick={handleCheckout}
+                                    disabled={checkoutLoading || !shippingAddress.trim()}
+                                >
+                                    {checkoutLoading ? "Placing Order..." : "Place Order"}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );
