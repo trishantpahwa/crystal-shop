@@ -48,11 +48,11 @@ export default function Cart() {
                 <Head>
                     <title>Cart — Crystal Atelier</title>
                 </Head>
-                <div className="min-h-screen bg-[var(--color-primary-bg)] text-[var(--color-primary-text)]">
+                <div className="min-h-screen bg-primary-bg text-primary-text">
                     <Container className="py-16">
                         <div className="mx-auto max-w-md text-center">
-                            <h1 className="text-3xl font-bold text-[var(--color-primary-text)] mb-4">Your Cart</h1>
-                            <p className="text-[var(--color-text-muted)] mb-8">
+                            <h1 className="text-3xl font-bold text-primary-text mb-4">Your Cart</h1>
+                            <p className="text-text-muted mb-8">
                                 Please sign in to view your cart and checkout.
                             </p>
                             <Button
@@ -74,14 +74,14 @@ export default function Cart() {
             <Head>
                 <title>Cart — Crystal Atelier</title>
             </Head>
-            <div className="min-h-screen bg-[var(--color-primary-bg)] text-[var(--color-primary-text)]">
+            <div className="min-h-screen bg-primary-bg text-primary-text">
                 <Container className="py-16">
                     <div className="mx-auto max-w-4xl">
-                        <h1 className="text-3xl font-bold text-[var(--color-primary-text)] mb-8">Your Cart</h1>
+                        <h1 className="text-3xl font-bold text-primary-text mb-8">Your Cart</h1>
 
                         {items.length === 0 ? (
                             <div className="text-center py-16">
-                                <p className="text-[var(--color-text-muted)] text-lg mb-4">Your cart is empty</p>
+                                <p className="text-text-muted text-lg mb-4">Your cart is empty</p>
                                 <Button href="/" variant="outline">
                                     Continue Shopping
                                 </Button>
@@ -93,7 +93,7 @@ export default function Cart() {
                                     {items.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="flex gap-4 p-4 bg-[var(--color-secondary-bg)] rounded-2xl ring-1 ring-[var(--color-border)]"
+                                            className="flex gap-4 p-4 bg-secondary-bg rounded-2xl ring-1 ring-border"
                                         >
                                             <div className="relative w-20 h-20 flex-shrink-0">
                                                 <Image
@@ -105,13 +105,13 @@ export default function Cart() {
                                             </div>
 
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="text-[var(--color-primary-text)] font-semibold truncate">
+                                                <h3 className="text-primary-text font-semibold truncate">
                                                     {item.product.name}
                                                 </h3>
-                                                <p className="text-[var(--color-text-muted)] text-sm truncate">
+                                                <p className="text-text-muted text-sm truncate">
                                                     {item.product.subtitle}
                                                 </p>
-                                                <p className="text-[var(--color-primary-text)] font-semibold mt-1">
+                                                <p className="text-primary-text font-semibold mt-1">
                                                     ₹ {item.product.price}
                                                 </p>
                                             </div>
@@ -121,17 +121,17 @@ export default function Cart() {
                                                     <button
                                                         onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
                                                         disabled={loading}
-                                                        className="w-8 h-8 rounded-full bg-[var(--color-accent-bg)] flex items-center justify-center text-[var(--color-primary-text)] hover:bg-[color-mix(in srgb, var(--color-accent-bg) 120%, transparent)] disabled:opacity-50"
+                                                        className="w-8 h-8 rounded-full bg-accent-bg flex items-center justify-center text-primary-text hover:bg-[color-mix(in srgb, var(--color-accent-bg) 120%, transparent)] disabled:opacity-50"
                                                     >
                                                         -
                                                     </button>
-                                                    <span className="text-[var(--color-primary-text)] min-w-[2rem] text-center">
+                                                    <span className="text-primary-text min-w-[2rem] text-center">
                                                         {item.quantity}
                                                     </span>
                                                     <button
                                                         onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
                                                         disabled={loading}
-                                                        className="w-8 h-8 rounded-full bg-[var(--color-accent-bg)] flex items-center justify-center text-[var(--color-primary-text)] hover:bg-[color-mix(in srgb, var(--color-accent-bg) 120%, transparent)] disabled:opacity-50"
+                                                        className="w-8 h-8 rounded-full bg-accent-bg flex items-center justify-center text-primary-text hover:bg-[color-mix(in srgb, var(--color-accent-bg) 120%, transparent)] disabled:opacity-50"
                                                     >
                                                         +
                                                     </button>
@@ -140,7 +140,7 @@ export default function Cart() {
                                                 <button
                                                     onClick={() => handleRemove(item.productId)}
                                                     disabled={loading}
-                                                    className="text-[var(--color-text-disabled)] hover:text-[var(--color-primary-text)] text-sm"
+                                                    className="text-text-disabled hover:text-primary-text text-sm"
                                                 >
                                                     Remove
                                                 </button>
@@ -151,24 +151,24 @@ export default function Cart() {
 
                                 {/* Order Summary */}
                                 <div className="lg:col-span-1">
-                                    <div className="bg-[var(--color-secondary-bg)] rounded-2xl p-6 ring-1 ring-[var(--color-border)]">
-                                        <h2 className="text-xl font-semibold text-[var(--color-primary-text)] mb-4">
+                                    <div className="bg-secondary-bg rounded-2xl p-6 ring-1 ring-border">
+                                        <h2 className="text-xl font-semibold text-primary-text mb-4">
                                             Order Summary
                                         </h2>
 
                                         <div className="space-y-2 mb-4">
-                                            <div className="flex justify-between text-[var(--color-text-muted)]">
+                                            <div className="flex justify-between text-text-muted">
                                                 <span>Subtotal</span>
                                                 <span>₹ {total}</span>
                                             </div>
-                                            <div className="flex justify-between text-[var(--color-text-muted)]">
+                                            <div className="flex justify-between text-text-muted">
                                                 <span>Shipping</span>
                                                 <span>Free</span>
                                             </div>
                                         </div>
 
-                                        <div className="border-t border-[var(--color-border)] pt-4 mb-6">
-                                            <div className="flex justify-between text-[var(--color-primary-text)] font-semibold text-lg">
+                                        <div className="border-t border-border pt-4 mb-6">
+                                            <div className="flex justify-between text-primary-text font-semibold text-lg">
                                                 <span>Total</span>
                                                 <span>₹ {total}</span>
                                             </div>

@@ -16,8 +16,8 @@ export function FeatureItem({
                     {icon}
                 </div>
                 <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[var(--color-primary-text)]">{title}</p>
-                    <p className="mt-2 text-sm leading-6 text-[var(--color-text-subtle)]">{description}</p>
+                    <p className="text-sm font-semibold text-primary-text">{title}</p>
+                    <p className="mt-2 text-sm leading-6 text-text-subtle">{description}</p>
                 </div>
             </div>
         </div>

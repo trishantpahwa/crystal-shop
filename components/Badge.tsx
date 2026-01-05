@@ -12,7 +12,7 @@ export function Badge({
     return (
         <span
             className={cn(
-                "inline-flex items-center gap-2 rounded-full bg-accent-bg px-3 py-1 text-xs font-medium text-[color-mix(in srgb, var(--color-primary-text) 85%, transparent)] ring-1 ring-[var(--color-border)]",
+                "inline-flex items-center gap-2 rounded-full bg-accent-bg px-3 py-1 text-xs font-medium text-[color-mix(in srgb, var(--color-primary-text) 85%, transparent)] ring-1 ring-border",
                 className
             )}
             {...props}
