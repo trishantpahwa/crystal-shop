@@ -21,3 +21,15 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String
+  subtitle  String
+  price     String
+  imageSrc  String
+  imageAlt  String
+  tone      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

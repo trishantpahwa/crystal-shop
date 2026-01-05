@@ -1,12 +1,10 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { Badge } from "./Badge";
 
 export type Product = {
     name: string;
     subtitle: string;
     price: string;
-    tag?: string;
     imageSrc: string;
     imageAlt: string;
     tone: "amethyst" | "rose" | "aqua" | "amber";
@@ -54,15 +52,12 @@ export function ProductCard({ product }: { product: Product }) {
                         <p className="truncate text-base font-semibold text-white">{product.name}</p>
                         <p className="mt-1 line-clamp-2 text-sm text-white/65">{product.subtitle}</p>
                     </div>
-                    {product.tag ? (
-                        <Badge className={cn("shrink-0", t.chip)}>{product.tag}</Badge>
-                    ) : null}
                 </div>
 
                 <div className="mt-5 grid grid-cols-[1fr_auto] items-end gap-4">
                     <div>
                         <p className="text-sm text-white/60">From</p>
-                        <p className="text-xl font-semibold text-white">{product.price}</p>
+                        <p className="text-xl font-semibold text-white">₹ {product.price}</p>
                     </div>
                     <button
                         className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/10 transition hover:bg-white/15 active:bg-white/10"
