@@ -18,17 +18,17 @@ export function Button({ variant = "primary", className, href, ...props }: Props
     const router = useRouter();
 
     const base =
-        "inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-60 disabled:pointer-events-none";
+        "inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-primary-bg)] disabled:opacity-60 disabled:pointer-events-none";
 
     const variants: Record<Variant, string> = {
         primary:
-            "bg-emerald-500 text-slate-950 hover:bg-emerald-400 active:bg-emerald-500/90",
+            "bg-[var(--color-button-primary-bg)] text-[var(--color-button-primary-text)] hover:bg-[color-mix(in srgb, var(--color-button-primary-bg) 90%, transparent)] active:bg-[color-mix(in srgb, var(--color-button-primary-bg) 90%, transparent)]",
         secondary:
-            "bg-white/10 text-white ring-1 ring-white/10 hover:bg-white/15 active:bg-white/10",
+            "bg-[var(--color-button-secondary-bg)] text-[var(--color-button-secondary-text)] ring-1 ring-border hover:bg-[color-mix(in srgb, var(--color-button-secondary-bg) 120%, transparent)] active:bg-[var(--color-button-secondary-bg)]",
         ghost:
-            "bg-transparent text-white/80 hover:text-white hover:bg-white/10 active:bg-white/10",
+            "bg-transparent text-[var(--color-button-ghost-text)] hover:text-[var(--color-button-secondary-text)] hover:bg-[var(--color-button-ghost-hover)] active:bg-[var(--color-button-ghost-hover)]",
         outline:
-            "bg-transparent text-emerald-500 ring-1 ring-emerald-500 hover:bg-emerald-500/10 active:bg-emerald-500/20",
+            "bg-transparent text-[var(--color-button-outline-text)] ring-1 ring-[var(--color-button-outline-ring)] hover:bg-[var(--color-button-outline-hover)] active:bg-[color-mix(in srgb, var(--color-button-outline-hover) 120%, transparent)]",
     };
 
     return <button onClick={() => href ? router.push(href) : null} className={cn(base, variants[variant], className)} {...props} />;
