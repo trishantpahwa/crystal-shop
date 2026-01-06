@@ -251,8 +251,6 @@ export default function AdminProductPage() {
         });
     };
 
-
-
     const onDelete = async (product: Product) => {
 
         if (!window.confirm(`Delete “${product.name}”?`)) return;
