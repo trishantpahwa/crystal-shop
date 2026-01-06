@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
 import authorizeAdmin from "@/config/admin-auth.config";
+import { ProductCreateInput } from "@/generated/prisma/models";
+import { ProductCategory } from "@/generated/prisma/enums";
 
 export default async function handler(
     request: NextApiRequest,
@@ -25,11 +27,12 @@ async function PUT(request: NextApiRequest, response: NextApiResponse) {
         if (!userID) {
             return response.status(401).json({ error: "Unauthorized" });
         }
-        const { name, subtitle, price, images, tone, tag, category } =
-            request.body;
+      
+        const { name, subtitle, price, images, tone, category } = request.body;
 
         if (
             !name ||
+            !subtitle ||
             !price ||
             !images ||
             !Array.isArray(images) ||
@@ -41,7 +44,7 @@ async function PUT(request: NextApiRequest, response: NextApiResponse) {
                 .json({ error: "Missing required fields" });
         }
 
-        const data: Record<string, unknown> = {
+        const data: ProductCreateInput = {
             name,
             subtitle,
             price,
@@ -49,12 +52,10 @@ async function PUT(request: NextApiRequest, response: NextApiResponse) {
             images,
         };
 
-        if (typeof tag === "string" && tag.trim()) data.tag = tag.trim();
-
         if (typeof category === "string" && category.trim()) {
             const cat = category.trim().toUpperCase();
             const allowed = ["RINGS", "NECKLACES", "EARRINGS", "BRACELETS"];
-            if (allowed.includes(cat)) data.category = cat;
+            if (allowed.includes(cat)) data.category = cat as ProductCategory;
         }
 
         const newProduct = await prisma.product.create({ data });
