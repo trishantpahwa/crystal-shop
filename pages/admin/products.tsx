@@ -104,16 +104,7 @@ export default function AdminProductPage() {
         tone: "",
     });
 
-    const [editing, setEditing] = useState<Product | null>(null);
-    const [editForm, setEditForm] = useState<ProductInput>({
-        name: "",
-        subtitle: "",
-        price: "",
-        tag: "",
-        category: "",
-        images: [],
-        tone: "",
-    });
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -148,30 +139,7 @@ export default function AdminProductPage() {
         });
     };
 
-    const handleEditFiles = async (files: FileList) => {
-        const fileArray = Array.from(files);
-        for (const f of fileArray) {
-            const url = await handleFileUpload(f);
-            if (url) {
-                setEditForm((s) => ({
-                    ...s,
-                    images: [...s.images, { src: url, alt: f.name }]
-                }));
-            }
-        }
-    };
 
-    const moveEditImage = (index: number, direction: 'up' | 'down') => {
-        setEditForm((s) => {
-            const images = [...s.images];
-            if (direction === 'up' && index > 0) {
-                [images[index - 1], images[index]] = [images[index], images[index - 1]];
-            } else if (direction === 'down' && index < images.length - 1) {
-                [images[index], images[index + 1]] = [images[index + 1], images[index]];
-            }
-            return { ...s, images };
-        });
-    };
 
     const hasPrev = skip > 0;
     const hasNext = products.length === take;
@@ -200,41 +168,66 @@ export default function AdminProductPage() {
         loadProducts();
     }, [loadProducts]);
 
-    const onCreate = async () => {
-        try {
-            const response = await fetch("/api/product", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-                },
-                body: JSON.stringify(createForm),
-            });
+    const onCreateOrUpdate = async () => {
+        if (editingProduct) {
+            // Update existing product
+            try {
+                const response = await fetch(`/api/product/${editingProduct.id}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+                    },
+                    body: JSON.stringify(createForm),
+                });
 
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data?.message ?? "Failed to create product");
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data?.message ?? "Failed to update product");
+                }
+                toast.success("Product updated");
+                onCancelEdit();
+                loadProducts();
+            } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed to update product");
             }
-            toast.success("Product created");
-            setCreateForm({
-                name: "",
-                subtitle: "",
-                price: "",
-                tag: "",
-                category: "",
-                images: [],
-                tone: "",
-            });
-            setSkip(0);
-            loadProducts();
-        } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Failed to create product");
+        } else {
+            // Create new product
+            try {
+                const response = await fetch("/api/product", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+                    },
+                    body: JSON.stringify(createForm),
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data?.message ?? "Failed to create product");
+                }
+                toast.success("Product created");
+                setCreateForm({
+                    name: "",
+                    subtitle: "",
+                    price: "",
+                    tag: "",
+                    category: "",
+                    images: [],
+                    tone: "",
+                });
+                setSkip(0);
+                loadProducts();
+            } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed to create product");
+            }
         }
     };
 
     const onStartEdit = (product: Product) => {
-        setEditing(product);
-        setEditForm({
+        setEditingProduct(product);
+        setCreateForm({
             name: product.name,
             subtitle: product.subtitle,
             price: product.price,
@@ -246,32 +239,16 @@ export default function AdminProductPage() {
     };
 
     const onCancelEdit = () => {
-        setEditing(null);
-    };
-
-    const onSaveEdit = async () => {
-        if (!editing) return;
-
-        try {
-            const response = await fetch(`/api/product/${editing.id}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-                },
-                body: JSON.stringify(editForm),
-            });
-
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data?.message ?? "Failed to update product");
-            }
-            toast.success("Product updated");
-            setEditing(null);
-            loadProducts();
-        } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Failed to update product");
-        }
+        setEditingProduct(null);
+        setCreateForm({
+            name: "",
+            subtitle: "",
+            price: "",
+            tag: "",
+            category: "",
+            images: [],
+            tone: "",
+        });
     };
 
     const onDelete = async (product: Product) => {
@@ -291,7 +268,7 @@ export default function AdminProductPage() {
                 throw new Error(data?.message ?? "Failed to delete product");
             }
             toast.success("Product deleted");
-            if (editing?.id === product.id) setEditing(null);
+            if (editingProduct?.id === product.id) onCancelEdit();
             loadProducts();
         } catch (e) {
             toast.error(e instanceof Error ? e.message : "Failed to delete product");
@@ -377,10 +354,26 @@ export default function AdminProductPage() {
 
                             <div className="mt-8 rounded-3xl bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] p-5 ring-1 ring-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)]">
                                 <div className="flex items-center justify-between gap-4">
-                                    <p className="text-sm font-semibold">Create product</p>
-                                    <Button type="button" onClick={onCreate} disabled={!canCreate}>
-                                        Create
-                                    </Button>
+                                    <div>
+                                        <p className="text-sm font-semibold">
+                                            {editingProduct ? "Edit product" : "Create product"}
+                                        </p>
+                                        {editingProduct && (
+                                            <p className="mt-1 text-xs text-[var(--color-primary-text)]/55">
+                                                ID: {editingProduct.id}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-3">
+                                        {editingProduct && (
+                                            <Button variant="secondary" type="button" onClick={onCancelEdit}>
+                                                Cancel
+                                            </Button>
+                                        )}
+                                        <Button type="button" onClick={onCreateOrUpdate} disabled={!canCreate}>
+                                            {editingProduct ? "Save" : "Create"}
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -699,146 +692,7 @@ export default function AdminProductPage() {
                                 </div>
                             </div>
 
-                            {editing ? (
-                                <div className="mt-8 rounded-3xl bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] p-5 ring-1 ring-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)]">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                        <div>
-                                            <p className="text-sm font-semibold">Edit product</p>
-                                            <p className="mt-1 text-xs text-[var(--color-primary-text)]/55">ID: {editing.id}</p>
-                                        </div>
 
-                                        <div className="flex gap-3">
-                                            <Button variant="secondary" type="button" onClick={onCancelEdit}>
-                                                Cancel
-                                            </Button>
-                                            <Button type="button" onClick={onSaveEdit}>
-                                                Save
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                                        <input
-                                            className={inputClassName}
-                                            placeholder="Name"
-                                            value={editForm.name}
-                                            onChange={(e) => setEditForm((s) => ({ ...s, name: e.target.value }))}
-                                        />
-                                        <input
-                                            className={inputClassName}
-                                            placeholder="Price (string)"
-                                            value={editForm.price}
-                                            onChange={(e) => setEditForm((s) => ({ ...s, price: e.target.value }))}
-                                        />
-                                        <input
-                                            className={inputClassName}
-                                            placeholder="Subtitle"
-                                            value={editForm.subtitle}
-                                            onChange={(e) => setEditForm((s) => ({ ...s, subtitle: e.target.value }))}
-                                        />
-                                        <select
-                                            className={inputClassName}
-                                            value={editForm.tone}
-                                            onChange={(e) =>
-                                                setEditForm((s) => ({ ...s, tone: e.target.value as Tone | "" }))
-                                            }
-                                        >
-                                            <option value="">Select tone</option>
-                                            {TONE_OPTIONS.map((t) => (
-                                                <option key={t} value={t}>
-                                                    {t}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <select
-                                            className={inputClassName}
-                                            value={editForm.category}
-                                            onChange={(e) => setEditForm((s) => ({ ...s, category: e.target.value }))}
-                                        >
-                                            <option value="">Select category</option>
-                                            <option value="rings">Rings</option>
-                                            <option value="necklaces">Necklaces</option>
-                                            <option value="earrings">Earrings</option>
-                                            <option value="bracelets">Bracelets</option>
-                                        </select>
-
-                                        <input
-                                            className={inputClassName}
-                                            placeholder="Tag (optional)"
-                                            value={editForm.tag}
-                                            onChange={(e) => setEditForm((s) => ({ ...s, tag: e.target.value }))}
-                                        />
-                                        <div className="sm:col-span-2">
-                                            <p className="text-xs text-[color-mix(in srgb, var(--color-primary-text) 60%, transparent)] mb-2">Images</p>
-                                            <div className="space-y-2">
-                                                {editForm.images.map((img, index) => (
-                                                    <div key={index} className="flex items-center gap-3 p-2 bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] rounded-lg">
-                                                        <Image src={img.src} alt={img.alt} width={64} height={64} className="w-16 h-16 object-cover rounded" />
-                                                        <input
-                                                            className={inputClassName + " flex-1"}
-                                                            placeholder="Image alt"
-                                                            value={img.alt}
-                                                            onChange={(e) => setEditForm((s) => ({
-                                                                ...s,
-                                                                images: s.images.map((i, idx) => idx === index ? { ...i, alt: e.target.value } : i)
-                                                            }))}
-                                                        />
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => moveEditImage(index, 'up')}
-                                                                disabled={index === 0}
-                                                                className="px-2 py-1 text-xs bg-gray-200 rounded disabled:opacity-50"
-                                                            >
-                                                                ↑
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => moveEditImage(index, 'down')}
-                                                                disabled={index === editForm.images.length - 1}
-                                                                className="px-2 py-1 text-xs bg-gray-200 rounded disabled:opacity-50"
-                                                            >
-                                                                ↓
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setEditForm((s) => ({
-                                                                    ...s,
-                                                                    images: s.images.filter((_, idx) => idx !== index)
-                                                                }))}
-                                                                className="px-2 py-1 text-xs bg-red-200 text-red-700 rounded hover:bg-red-300"
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                <div
-                                                    className="border-2 border-dashed border-[color-mix(in srgb, var(--color-primary-text) 20%, transparent)] rounded-lg p-4 text-center cursor-pointer hover:border-[color-mix(in srgb, var(--color-primary-text) 40%, transparent)] transition-colors"
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    onDragOver={(e) => e.preventDefault()}
-                                                    onDrop={(e) => {
-                                                        e.preventDefault();
-                                                        handleEditFiles(e.dataTransfer.files);
-                                                    }}
-                                                >
-                                                    <p className="text-sm text-[color-mix(in srgb, var(--color-primary-text) 60%, transparent)]">
-                                                        Drop images here or click to select
-                                                    </p>
-                                                </div>
-                                                <input
-                                                    ref={fileInputRef}
-                                                    type="file"
-                                                    accept="image/*"
-                                                    multiple
-                                                    className="hidden"
-                                                    onChange={(e) => handleEditFiles(e.target.files!)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : null}
                         </Container>
                     </section>
                 </main>
