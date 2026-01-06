@@ -29,6 +29,7 @@ export default async function handler(
 async function GET(request: NextApiRequest, response: NextApiResponse) {
     const {
         tone,
+        category,
         q,
         sortBy = "createdAt",
         order = "desc",
@@ -39,6 +40,14 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
     const where: Record<string, unknown> = {};
 
     if (typeof tone === "string" && tone.trim()) where.tone = tone.trim();
+
+    if (typeof category === "string" && category.trim()) {
+        const validCategory = category.trim().toUpperCase();
+        const validCategories = ["RINGS", "NECKLACES", "EARRINGS", "BRACELETS"];
+        if (validCategories.includes(validCategory)) {
+            where.category = validCategory;
+        }
+    }
 
     if (typeof q === "string" && q.trim()) {
         where.OR = [
