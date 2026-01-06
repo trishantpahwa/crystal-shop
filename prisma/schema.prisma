@@ -25,14 +25,15 @@ model User {
 }
 
 model Product {
-  id         Int         @id @default(autoincrement())
+  id         Int             @id @default(autoincrement())
   name       String
   subtitle   String
   price      String
   tone       String
+  category   ProductCategory @default(RINGS)
   images     Json
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
   cartItems  CartItem[]
   orderItems OrderItem[]
 }
@@ -89,4 +90,11 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum ProductCategory {
+  RINGS
+  NECKLACES
+  EARRINGS
+  BRACELETS
 }

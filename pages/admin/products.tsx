@@ -23,6 +23,7 @@ type Product = {
     price: string;
     tag: string | null;
     tone: Tone;
+    category: string;
     images: Array<{
         id: number;
         src: string;
@@ -38,6 +39,7 @@ type ProductInput = {
     subtitle: string;
     price: string;
     tag: string;
+    category: string;
     images: Array<{
         src: string;
         alt: string;
@@ -58,6 +60,7 @@ function buildProductsUrl(params: {
     q: string;
     tag: string;
     tone: string;
+    category: string;
     sortBy: SortBy;
     order: "asc" | "desc";
     skip: number;
@@ -67,6 +70,7 @@ function buildProductsUrl(params: {
     if (params.q.trim()) search.set("q", params.q.trim());
     if (params.tag.trim()) search.set("tag", params.tag.trim());
     if (params.tone.trim()) search.set("tone", params.tone.trim());
+    if (params.category.trim()) search.set("category", params.category.trim());
     search.set("sortBy", params.sortBy);
     search.set("order", params.order);
     search.set("skip", String(params.skip));
@@ -80,6 +84,7 @@ export default function AdminProductPage() {
     const [q, setQ] = useState("");
     const [tag, setTag] = useState("");
     const [tone, setTone] = useState<Tone | "">("");
+    const [category, setCategory] = useState("");
     const [sortBy, setSortBy] = useState<SortBy>("createdAt");
     const [order, setOrder] = useState<"asc" | "desc">("desc");
     const [skip, setSkip] = useState(0);
@@ -94,6 +99,7 @@ export default function AdminProductPage() {
         subtitle: "",
         price: "",
         tag: "",
+        category: "",
         images: [],
         tone: "",
     });
@@ -104,6 +110,7 @@ export default function AdminProductPage() {
         subtitle: "",
         price: "",
         tag: "",
+        category: "",
         images: [],
         tone: "",
     });
@@ -166,7 +173,7 @@ export default function AdminProductPage() {
         setLoading(true);
         setError(null);
         try {
-            const url = buildProductsUrl({ q, tag, tone, sortBy, order, skip, take });
+            const url = buildProductsUrl({ q, tag, tone, category, sortBy, order, skip, take });
             const response = await fetch(url);
             const data = await response.json();
             if (!response.ok) {
@@ -180,7 +187,7 @@ export default function AdminProductPage() {
         } finally {
             setLoading(false);
         }
-    }, [q, tag, tone, sortBy, order, skip, take]);
+    }, [q, tag, tone, category, sortBy, order, skip, take]);
 
     useEffect(() => {
         loadProducts();
@@ -207,6 +214,7 @@ export default function AdminProductPage() {
                 subtitle: "",
                 price: "",
                 tag: "",
+                category: "",
                 images: [],
                 tone: "",
             });
@@ -224,6 +232,7 @@ export default function AdminProductPage() {
             subtitle: product.subtitle,
             price: product.price,
             tag: product.tag ?? "",
+            category: product.category ? String(product.category).toLowerCase() : "",
             images: product.images.map(img => ({ src: img.src, alt: img.alt })),
             tone: product.tone,
         });
@@ -395,6 +404,17 @@ export default function AdminProductPage() {
                                         value={createForm.tag}
                                         onChange={(e) => setCreateForm((s) => ({ ...s, tag: e.target.value }))}
                                     />
+                                    <select
+                                        className={inputClassName}
+                                        value={createForm.category}
+                                        onChange={(e) => setCreateForm((s) => ({ ...s, category: e.target.value }))}
+                                    >
+                                        <option value="">Select category</option>
+                                        <option value="rings">Rings</option>
+                                        <option value="necklaces">Necklaces</option>
+                                        <option value="earrings">Earrings</option>
+                                        <option value="bracelets">Bracelets</option>
+                                    </select>
                                     <div className="sm:col-span-2">
                                         <p className="text-xs text-[color-mix(in srgb, var(--color-primary-text) 60%, transparent)] mb-2">Images</p>
                                         <div className="space-y-2">
@@ -503,6 +523,17 @@ export default function AdminProductPage() {
                                                 </option>
                                             ))}
                                         </select>
+                                        <select
+                                            className={inputClassName}
+                                            value={category}
+                                            onChange={(e) => { setCategory(e.target.value); setSkip(0); }}
+                                        >
+                                            <option value="">All categories</option>
+                                            <option value="rings">Rings</option>
+                                            <option value="necklaces">Necklaces</option>
+                                            <option value="earrings">Earrings</option>
+                                            <option value="bracelets">Bracelets</option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -519,6 +550,18 @@ export default function AdminProductPage() {
                                             <option value="price">Sort: price</option>
                                             <option value="tone">Sort: tone</option>
                                             <option value="tag">Sort: tag</option>
+                                        </select>
+
+                                        <select
+                                            className={inputClassName}
+                                            value={category}
+                                            onChange={(e) => { setCategory(e.target.value); setSkip(0); }}
+                                        >
+                                            <option value="">All categories</option>
+                                            <option value="rings">Rings</option>
+                                            <option value="necklaces">Necklaces</option>
+                                            <option value="earrings">Earrings</option>
+                                            <option value="bracelets">Bracelets</option>
                                         </select>
 
                                         <select
@@ -567,6 +610,7 @@ export default function AdminProductPage() {
                                                 <th className="py-3 pr-4 font-medium">Name</th>
                                                 <th className="py-3 pr-4 font-medium">Price</th>
                                                 <th className="py-3 pr-4 font-medium">Tone</th>
+                                                <th className="py-3 pr-4 font-medium">Category</th>
                                                 <th className="py-3 pr-4 font-medium">Tag</th>
                                                 <th className="py-3 pr-4 font-medium">Updated</th>
                                                 <th className="py-3 text-right font-medium">Actions</th>
@@ -581,6 +625,7 @@ export default function AdminProductPage() {
                                                     </td>
                                                     <td className="py-3 pr-4 text-[var(--color-primary-text)]/80">{p.price}</td>
                                                     <td className="py-3 pr-4 text-[var(--color-primary-text)]/80">{p.tone}</td>
+                                                    <td className="py-3 pr-4 text-[var(--color-primary-text)]/80">{p.category ?? "—"}</td>
                                                     <td className="py-3 pr-4 text-[var(--color-primary-text)]/80">{p.tag ?? "—"}</td>
                                                     <td className="py-3 pr-4 text-[var(--color-primary-text)]/60">{formatDate(p.updatedAt)}</td>
                                                     <td className="py-3 text-right">
@@ -602,7 +647,7 @@ export default function AdminProductPage() {
 
                                             {!loading && products.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={6} className="py-6 text-center text-[var(--color-primary-text)]/60">
+                                                    <td colSpan={7} className="py-6 text-center text-[var(--color-primary-text)]/60">
                                                         No products found.
                                                     </td>
                                                 </tr>
@@ -687,6 +732,18 @@ export default function AdminProductPage() {
                                                 </option>
                                             ))}
                                         </select>
+                                        <select
+                                            className={inputClassName}
+                                            value={editForm.category}
+                                            onChange={(e) => setEditForm((s) => ({ ...s, category: e.target.value }))}
+                                        >
+                                            <option value="">Select category</option>
+                                            <option value="rings">Rings</option>
+                                            <option value="necklaces">Necklaces</option>
+                                            <option value="earrings">Earrings</option>
+                                            <option value="bracelets">Bracelets</option>
+                                        </select>
+
                                         <input
                                             className={inputClassName}
                                             placeholder="Tag (optional)"

@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
@@ -16,10 +17,10 @@ import { useAuth } from "@/providers/AuthProvider";
 import type { Product } from "@/generated/prisma/client";
 
 const categories = [
-  { name: "Rings", desc: "Bold facets, perfect fit" },
-  { name: "Necklaces", desc: "Soft glow, close to heart" },
-  { name: "Earrings", desc: "Light-catching essentials" },
-  { name: "Bracelets", desc: "Layer-friendly sparkle" },
+  { name: "Rings", desc: "Bold facets, perfect fit", slug: "rings" },
+  { name: "Necklaces", desc: "Soft glow, close to heart", slug: "necklaces" },
+  { name: "Earrings", desc: "Light-catching essentials", slug: "earrings" },
+  { name: "Bracelets", desc: "Layer-friendly sparkle", slug: "bracelets" },
 ];
 
 const testimonials = [
@@ -322,9 +323,9 @@ export default function Home() {
 
                   <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-xl">
                     {categories.map((c, idx) => (
-                      <a
+                      <Link
                         key={c.name}
-                        href="#"
+                        href={`/products?category=${c.slug}`}
                         className={cn(
                           "group rounded-3xl bg-secondary-bg p-5 ring-1 ring-border transition hover:bg-[color-mix(in srgb, var(--color-secondary-bg) 140%, transparent)]",
                           idx === 0 && "sm:col-span-2"
@@ -337,7 +338,7 @@ export default function Home() {
                           </div>
                           <ArrowRightIcon className="h-5 w-5 text-text-faint transition group-hover:text-primary-text" />
                         </div>
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>
