@@ -8,18 +8,32 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { useCart } from "@/providers/CartProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import type { Product } from "@/generated/prisma/client";
 
+const categories = [
+    { value: "rings", label: "Rings" },
+    { value: "necklaces", label: "Necklaces" },
+    { value: "earrings", label: "Earrings" },
+    { value: "bracelets", label: "Bracelets" },
+];
+
 export default function ProductsPage() {
+    const router = useRouter();
     const { isAuthenticated } = useAuth();
     const { items } = useCart();
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const selectedCategory = (router.query.category as string) || "";
 
-    const fetchProducts = async () => {
+    const fetchProducts = async (category?: string) => {
         try {
-            const response = await fetch("/api/products");
+            setLoading(true);
+            const url = category
+                ? `/api/products?category=${encodeURIComponent(category)}`
+                : "/api/products";
+            const response = await fetch(url);
             const data = await response.json();
             if (response.ok) setProducts(data.products);
         } catch (error) {
@@ -29,9 +43,14 @@ export default function ProductsPage() {
         }
     };
 
+    const handleCategoryChange = (category: string) => {
+        const query = category ? { category } : {};
+        router.push({ pathname: "/products", query }, undefined, { shallow: true });
+    };
+
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        fetchProducts(selectedCategory);
+    }, [selectedCategory]);
 
     return (
         <>
@@ -96,6 +115,32 @@ export default function ProductsPage() {
                                     title="Every piece, every crystal"
                                     subtitle="Explore our complete collection of hand-finished crystal jewellery."
                                 />
+                            </div>
+
+                            <div className="mt-8 flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => handleCategoryChange("")}
+                                    className={`rounded-full px-4 py-2 text-sm font-medium ring-1 transition ${selectedCategory === ""
+                                            ? "bg-accent-bg text-primary-text ring-border"
+                                            : "bg-secondary-bg text-text-muted ring-border hover:bg-accent-bg hover:text-primary-text"
+                                        }`}
+                                >
+                                    All
+                                </button>
+                                {categories.map((cat) => (
+                                    <button
+                                        key={cat.value}
+                                        type="button"
+                                        onClick={() => handleCategoryChange(cat.value)}
+                                        className={`rounded-full px-4 py-2 text-sm font-medium ring-1 transition ${selectedCategory === cat.value
+                                                ? "bg-accent-bg text-primary-text ring-border"
+                                                : "bg-secondary-bg text-text-muted ring-border hover:bg-accent-bg hover:text-primary-text"
+                                            }`}
+                                    >
+                                        {cat.label}
+                                    </button>
+                                ))}
                             </div>
 
                             {loading ? (

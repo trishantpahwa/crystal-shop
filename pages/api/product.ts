@@ -25,7 +25,8 @@ async function PUT(request: NextApiRequest, response: NextApiResponse) {
         if (!userID) {
             return response.status(401).json({ error: "Unauthorized" });
         }
-        const { name, subtitle, price, images, tone } = request.body;
+        const { name, subtitle, price, images, tone, tag, category } =
+            request.body;
 
         if (
             !name ||
@@ -40,15 +41,23 @@ async function PUT(request: NextApiRequest, response: NextApiResponse) {
                 .json({ error: "Missing required fields" });
         }
 
-        const newProduct = await prisma.product.create({
-            data: {
-                name,
-                subtitle,
-                price,
-                tone,
-                images,
-            },
-        });
+        const data: Record<string, unknown> = {
+            name,
+            subtitle,
+            price,
+            tone,
+            images,
+        };
+
+        if (typeof tag === "string" && tag.trim()) data.tag = tag.trim();
+
+        if (typeof category === "string" && category.trim()) {
+            const cat = category.trim().toUpperCase();
+            const allowed = ["RINGS", "NECKLACES", "EARRINGS", "BRACELETS"];
+            if (allowed.includes(cat)) data.category = cat;
+        }
+
+        const newProduct = await prisma.product.create({ data });
 
         return response.status(201).json({ product: newProduct });
     } catch (error) {
