@@ -1,15 +1,9 @@
-import { PrismaClient } from "../generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
+import prisma from "@/config/prisma.config";
+
 import fs from "fs";
 import path from "path";
 import "dotenv/config";
 import { put } from "@vercel/blob";
-
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
 
 async function main() {
     const stockImagesDir = path.join(process.cwd(), "stock-images");
