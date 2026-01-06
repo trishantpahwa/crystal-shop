@@ -27,6 +27,7 @@ async function PUT(request: NextApiRequest, response: NextApiResponse) {
         if (!userID) {
             return response.status(401).json({ error: "Unauthorized" });
         }
+      
         const { name, subtitle, price, images, tone, category } = request.body;
 
         if (
