@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
-import authorizeAdmin from "@/config/admin-auth.config";
+import { verifyAdminToken } from "@/config/admin-auth.config";
 import { ProductCreateInput } from "@/generated/prisma/models";
 import { ProductCategory } from "@/generated/prisma/enums";
 
@@ -21,13 +21,15 @@ export default async function handler(
 
 async function PUT(request: NextApiRequest, response: NextApiResponse) {
     try {
-        const token = request.headers["x-api-key"]?.toString() ?? "";
-        const userID = authorizeAdmin(token);
-
-        if (!userID) {
+        const authHeader = request.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return response.status(401).json({ error: "Unauthorized" });
         }
-      
+        const token = authHeader.substring(7);
+        if (!verifyAdminToken(token)) {
+            return response.status(401).json({ error: "Unauthorized" });
+        }
+
         const { name, subtitle, price, images, tone, category } = request.body;
 
         if (

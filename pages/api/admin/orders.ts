@@ -1,14 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
-import authorizeAdmin from "@/config/admin-auth.config";
+import { verifyAdminToken } from "@/config/admin-auth.config";
 import { OrderStatus } from "@/generated/prisma/client";
 
 export default async function handler(
     request: NextApiRequest,
     response: NextApiResponse
 ) {
-    const token = request.headers["x-api-key"] as string;
-    if (!authorizeAdmin(token)) {
+    const authHeader = request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return response.status(401).json({ error: "Unauthorized" });
+    }
+    const token = authHeader.substring(7);
+    if (!verifyAdminToken(token)) {
         return response.status(401).json({ error: "Unauthorized" });
     }
 
