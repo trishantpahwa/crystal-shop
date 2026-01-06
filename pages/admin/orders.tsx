@@ -77,6 +77,13 @@ export default function AdminOrdersPage() {
     const [error, setError] = useState<string | null>(null);
     const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
 
+    useEffect(() => {
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+            router.push("/admin/login");
+        }
+    }, [router]);
+
     const fetchOrders = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -89,7 +96,7 @@ export default function AdminOrdersPage() {
 
             const response = await fetch(`/api/admin/orders?${params.toString()}`, {
                 headers: {
-                    "x-api-key": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "",
+                    Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
                 },
             });
 
@@ -118,7 +125,7 @@ export default function AdminOrdersPage() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-api-key": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "",
+                    Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
                 },
                 body: JSON.stringify({ orderId, status: newStatus }),
             });
@@ -187,7 +194,18 @@ export default function AdminOrdersPage() {
                 </header>
 
                 <Container className="py-16">
-                    <SectionTitle title="Order Management" />
+                    <div className="flex justify-between items-center mb-6">
+                        <SectionTitle title="Order Management" />
+                        <Button
+                            onClick={() => {
+                                localStorage.removeItem("adminToken");
+                                router.push("/admin/login");
+                            }}
+                            variant="outline"
+                        >
+                            Logout
+                        </Button>
+                    </div>
 
                     <Divider />
 

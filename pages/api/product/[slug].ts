@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/config/prisma.config";
-import authorizeAdmin from "@/config/admin-auth.config";
+import { verifyAdminToken } from "@/config/admin-auth.config";
 
 export default async function handler(
     request: NextApiRequest,
@@ -45,10 +45,12 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
 
 async function PATCH(request: NextApiRequest, response: NextApiResponse) {
     try {
-        const token = request.headers["x-api-key"]?.toString() ?? "";
-        const userID = authorizeAdmin(token);
-
-        if (!userID) {
+        const authHeader = request.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return response.status(401).json({ error: "Unauthorized" });
+        }
+        const token = authHeader.substring(7);
+        if (!verifyAdminToken(token)) {
             return response.status(401).json({ error: "Unauthorized" });
         }
 
@@ -92,10 +94,12 @@ async function PATCH(request: NextApiRequest, response: NextApiResponse) {
 
 async function DELETE(request: NextApiRequest, response: NextApiResponse) {
     try {
-        const token = request.headers["x-api-key"]?.toString() ?? "";
-        const userID = authorizeAdmin(token);
-
-        if (!userID) {
+        const authHeader = request.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return response.status(401).json({ error: "Unauthorized" });
+        }
+        const token = authHeader.substring(7);
+        if (!verifyAdminToken(token)) {
             return response.status(401).json({ error: "Unauthorized" });
         }
 
