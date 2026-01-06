@@ -1,7 +1,16 @@
-export default function authorizeAdmin(token: string): boolean | null {
+import jwt from "jsonwebtoken";
+
+const SECRET = process.env.ADMIN_JWT_SECRET || "default-admin-secret";
+
+export function generateAdminToken(username: string): string {
+    return jwt.sign({ username, role: "admin" }, SECRET, { expiresIn: "1h" });
+}
+
+export function verifyAdminToken(token: string): boolean {
     try {
-        return token === process.env.ADMIN_PASSWORD!;
+        jwt.verify(token, SECRET);
+        return true;
     } catch {
-        return null;
+        return false;
     }
 }

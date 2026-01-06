@@ -116,6 +116,13 @@ export default function AdminProductPage() {
     });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    useEffect(() => {
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+            router.push("/admin/login");
+        }
+    }, [router]);
+
     const handleFiles = async (files: FileList) => {
         const fileArray = Array.from(files);
         for (const f of fileArray) {
@@ -199,7 +206,7 @@ export default function AdminProductPage() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-api-key": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "" // Temporary fix for authentication => @trishantpahwa | 2026-01-05 15:24:58
+                    Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
                 },
                 body: JSON.stringify(createForm),
             });
@@ -250,7 +257,7 @@ export default function AdminProductPage() {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-api-key": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "" // Temporary fix for authentication => @trishantpahwa | 2026-01-05 15:04:54
+                    Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
                 },
                 body: JSON.stringify(editForm),
             });
@@ -275,7 +282,7 @@ export default function AdminProductPage() {
             const response = await fetch(`/api/product/${product.id}`, {
                 method: "DELETE",
                 headers: {
-                    "x-api-key": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "" // Temporary fix for authentication => @trishantpahwa | 2026-01-05 15:25:13
+                    Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
                 },
             });
 
@@ -351,11 +358,22 @@ export default function AdminProductPage() {
                 <main>
                     <section className="py-10">
                         <Container>
-                            <SectionTitle
-                                eyebrow="Products"
-                                title="Product management"
-                                subtitle="Create, edit, and delete products."
-                            />
+                            <div className="flex justify-between items-start mb-6">
+                                <SectionTitle
+                                    eyebrow="Products"
+                                    title="Product management"
+                                    subtitle="Create, edit, and delete products."
+                                />
+                                <Button
+                                    onClick={() => {
+                                        localStorage.removeItem("adminToken");
+                                        router.push("/admin/login");
+                                    }}
+                                    variant="outline"
+                                >
+                                    Logout
+                                </Button>
+                            </div>
 
                             <div className="mt-8 rounded-3xl bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] p-5 ring-1 ring-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)]">
                                 <div className="flex items-center justify-between gap-4">
