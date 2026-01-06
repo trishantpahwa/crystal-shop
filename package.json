@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "npx tsx prisma/seed.ts",
+    "images:fetch": "node prisma/fetch-stock-images.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",
