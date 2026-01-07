@@ -102,7 +102,7 @@ function NavLink({ children }: { children: string }) {
 }
 
 export default function Home() {
-  const { isAuthenticated, refresh } = useAuth();
+  const { isAuthenticated, refresh, logout } = useAuth();
   const { items } = useCart();
 
   const [signedIn, setSignedIn] = useState(false);
@@ -116,7 +116,17 @@ export default function Home() {
     else toast.error("Sign in failed. Please try again.");
     setSignedIn(signedIn);
     if (signedIn) refresh();
-  }// ; Prettify later => @trishantpahwa | 2025-12-25 00:44:39
+  };
+
+  const _logout = async () => {
+    const loggedOut = await logout();
+    if (loggedOut) {
+      toast.success("Logged out successfully!");
+      setSignedIn(false);
+    } else {
+      toast.error("Log out failed. Please try again.");
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -188,11 +198,20 @@ export default function Home() {
                 >
                   Search
                 </button>
-                {signedIn ? <Button variant="secondary" type="button" href="/cart">
-                  Bag ({items.length})
-                </Button> : <Button variant="secondary" type="button" onClick={_signInWithGoogle}>
-                  Sign In
-                </Button>}
+                {signedIn ? (
+                  <div className="flex items-center gap-2">
+                    <Button variant="secondary" type="button" href="/cart">
+                      Bag ({items.length})
+                    </Button>
+                    <Button variant="outline" type="button" onClick={_logout}>
+                      Log Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Button variant="secondary" type="button" onClick={_signInWithGoogle}>
+                    Sign In
+                  </Button>
+                )}
               </div>
             </div>
           </Container>

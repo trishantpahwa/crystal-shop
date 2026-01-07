@@ -9,6 +9,7 @@ import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { Divider } from "@/components/Divider";
 import { SectionTitle } from "@/components/SectionTitle";
+import { signOutAdmin } from "@/services/login.service";
 
 type SortBy = "createdAt" | "updatedAt" | "name" | "price" | "tone" | "tag";
 
@@ -343,7 +344,7 @@ export default function AdminProductPage() {
                                 />
                                 <Button
                                     onClick={() => {
-                                        localStorage.removeItem("adminToken");
+                                        signOutAdmin();
                                         router.push("/admin/login");
                                     }}
                                     variant="outline"

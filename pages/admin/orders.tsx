@@ -10,6 +10,7 @@ import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { Divider } from "@/components/Divider";
 import { SectionTitle } from "@/components/SectionTitle";
+import { signOutAdmin } from "@/services/login.service";
 
 type OrderStatus = "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 
@@ -210,7 +211,7 @@ export default function AdminOrdersPage() {
                         <SectionTitle title="Order Management" />
                         <Button
                             onClick={() => {
-                                localStorage.removeItem("adminToken");
+                                signOutAdmin();
                                 router.push("/admin/login");
                             }}
                             variant="outline"
