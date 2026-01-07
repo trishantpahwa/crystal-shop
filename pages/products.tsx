@@ -73,6 +73,20 @@ export default function ProductsPage() {
         fetchProducts(filters);
     }, [filters, fetchProducts]);
 
+    // Update filters when router query changes
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            q: router.query.q as string || "",
+            category: router.query.category as string || "",
+            minPrice: router.query.minPrice as string || "",
+            maxPrice: router.query.maxPrice as string || "",
+            minRating: router.query.minRating as string || "",
+            sortBy: router.query.sortBy as string || "createdAt",
+            order: router.query.order as string || "desc",
+        }));
+    }, [router.query]);
+
     // Infinite scroll handler
     useEffect(() => {
         const handleScroll = () => {
