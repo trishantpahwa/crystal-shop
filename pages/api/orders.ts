@@ -30,7 +30,43 @@ async function GET(
     response: NextApiResponse,
     userID: number
 ) {
+    const { productId } = request.query;
+
+    // If productId is provided, check if user has purchased that product
+    if (productId) {
+        try {
+            const hasPurchased = await prisma.orderItem.findFirst({
+                where: {
+                    productId: parseInt(productId as string),
+                    order: {
+                        userId: userID,
+                        status: {
+                            in: ["DELIVERED"],
+                        },
+                    },
+                },
+            });
+
+            return response.status(200).json({
+                hasPurchased: !!hasPurchased,
+            });
+        } catch (error) {
+            console.error("Error checking purchase status:", error);
+            return response
+                .status(500)
+                .json({ error: "Failed to check purchase status" });
+        }
+    }
+
+    // Otherwise, return user's orders as before
     try {
+        const page = Math.max(1, Number(request.query.page) || 1);
+        const limit = Math.min(
+            50,
+            Math.max(1, Number(request.query.limit) || 10)
+        );
+        const skip = (page - 1) * limit;
+
         const orders = await prisma.order.findMany({
             where: { userId: userID },
             include: {
@@ -41,6 +77,8 @@ async function GET(
                 },
             },
             orderBy: { createdAt: "desc" },
+            skip,
+            take: limit,
         });
 
         return response.status(200).json(orders);

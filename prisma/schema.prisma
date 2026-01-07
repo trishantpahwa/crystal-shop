@@ -22,6 +22,7 @@ model User {
   updatedAt   DateTime @updatedAt
   cart        Cart?
   orders      Order[]
+  reviews     Review[]
 }
 
 model Product {
@@ -37,6 +38,7 @@ model Product {
   updatedAt  DateTime        @updatedAt
   cartItems  CartItem[]
   orderItems OrderItem[]
+  reviews    Review[]
 }
 
 model Cart {
@@ -83,6 +85,20 @@ model OrderItem {
   price     String // Price at time of order
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating    Int // 1-5 stars
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId]) // One review per user per product
 }
 
 enum OrderStatus {

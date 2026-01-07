@@ -1,91 +1,130 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
-import { ArrowLeftIcon, SparkleIcon } from "@/components/Icons";
+import { ArrowLeftIcon } from "@/components/Icons";
 import { ProductCard } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
-import { useCart } from "@/providers/CartProvider";
-import { useAuth } from "@/providers/AuthProvider";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type { Product } from "@/generated/prisma/client";
-
-const categories = [
-    { value: "rings", label: "Rings" },
-    { value: "necklaces", label: "Necklaces" },
-    { value: "earrings", label: "Earrings" },
-    { value: "bracelets", label: "Bracelets" },
-];
-
-function ProductCardSkeleton() {
-    return (
-        <div className="group relative overflow-hidden rounded-3xl bg-secondary-bg ring-1 ring-border">
-            <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
-                <div className="absolute -left-16 -top-16 h-40 w-40 rounded-full bg-[color-mix(in srgb, rgba(52, 211, 153, 0.4) 25%, transparent)] blur-2xl" />
-                <div className="absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-[color-mix(in srgb, rgba(236, 72, 153, 0.4) 25%, transparent)] blur-2xl" />
-            </div>
-            <div className="block">
-                <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                            <div className="h-5 bg-gray-300 rounded animate-pulse mb-2"></div>
-                            <div className="h-4 bg-gray-300 rounded animate-pulse w-3/4"></div>
-                        </div>
-                    </div>
-                    <div className="mt-5 grid grid-cols-[1fr_auto] items-end gap-4">
-                        <div>
-                            <div className="h-4 bg-gray-300 rounded animate-pulse w-12 mb-1"></div>
-                            <div className="h-6 bg-gray-300 rounded animate-pulse w-16"></div>
-                        </div>
-                    </div>
-                    <div className="mt-6">
-                        <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
-                            <div className="relative aspect-[4/3] w-full bg-gray-300 animate-pulse"></div>
-                        </div>
-                    </div>
-                </div>
-                <div className="p-5 pt-0">
-                    <div className="w-full h-9 bg-gray-300 rounded-full animate-pulse"></div>
-                </div>
-            </div>
-        </div>
-    );
-}
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import SearchFilters from "@/components/SearchFilters";
 
 export default function ProductsPage() {
     const router = useRouter();
-    const { isAuthenticated } = useAuth();
-    const { items } = useCart();
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const selectedCategory = (router.query.category as string) || "";
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [filters, setFilters] = useState({
+        q: router.query.q as string || "",
+        category: router.query.category as string || "",
+        minPrice: router.query.minPrice as string || "",
+        maxPrice: router.query.maxPrice as string || "",
+        minRating: router.query.minRating as string || "",
+        sortBy: router.query.sortBy as string || "createdAt",
+        order: router.query.order as string || "desc",
+        page: "1",
+        take: "24",
+    });
 
-    const fetchProducts = async (category?: string) => {
-        try {
+    const fetchProducts = useCallback(async (currentFilters: typeof filters, append: boolean = false, page: number = 1) => {
+        if (append) {
+            setLoadingMore(true);
+        } else {
             setLoading(true);
-            const url = category
-                ? `/api/products?category=${encodeURIComponent(category)}`
-                : "/api/products";
-            const response = await fetch(url);
+            setCurrentPage(1);
+            setHasMore(true);
+        }
+
+        try {
+            const query = new URLSearchParams();
+            Object.entries(currentFilters).forEach(([key, value]) => {
+                if (value) query.set(key, value);
+            });
+
+            if (append) {
+                query.set('skip', ((page - 1) * 24).toString());
+            }
+
+            const response = await fetch(`/api/products?${query.toString()}`);
             const data = await response.json();
-            if (response.ok) setProducts(data.products);
+
+            if (append) {
+                setProducts(prev => [...prev, ...data.products]);
+                setHasMore(data.products.length === 24); // Check if there are more products to load
+            } else {
+                setProducts(data.products);
+                setHasMore(data.products.length === 24);
+            }
         } catch (error) {
             console.error("Failed to fetch products:", error);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
-    };
-
-    const handleCategoryChange = (category: string) => {
-        const query = category ? { category } : {};
-        router.push({ pathname: "/products", query }, undefined, { shallow: true });
-    };
+    }, []);
 
     useEffect(() => {
-        fetchProducts(selectedCategory);
-    }, [selectedCategory]);
+        fetchProducts(filters);
+    }, [filters, fetchProducts]);
+
+    // Update filters when router query changes
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            q: router.query.q as string || "",
+            category: router.query.category as string || "",
+            minPrice: router.query.minPrice as string || "",
+            maxPrice: router.query.maxPrice as string || "",
+            minRating: router.query.minRating as string || "",
+            sortBy: router.query.sortBy as string || "createdAt",
+            order: router.query.order as string || "desc",
+        }));
+    }, [router.query]);
+
+    // Infinite scroll handler
+    useEffect(() => {
+        const handleScroll = () => {
+            if (loadingMore || !hasMore) return;
+
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+
+            // Load more when user is within 200px of bottom
+            if (scrollTop + windowHeight >= documentHeight - 400) {
+                const nextPage = currentPage + 1;
+                setCurrentPage(nextPage);
+                fetchProducts(filters, true, nextPage);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loadingMore, hasMore, currentPage, filters, fetchProducts]);
+
+    const handleFiltersChange = (newFilters: Partial<typeof filters>) => {
+        const updated = { ...filters, ...newFilters, page: "1" };
+        setFilters(updated);
+        setCurrentPage(1);
+        setProducts([]); // Clear current products when filters change
+        // Update URL
+        const query = { ...router.query };
+        Object.keys(newFilters).forEach(key => {
+            if (newFilters[key as keyof typeof newFilters]) {
+                query[key] = newFilters[key as keyof typeof newFilters];
+            } else {
+                delete query[key];
+            }
+        });
+        query.page = "1";
+        router.push({ pathname: "/products", query }, undefined, { shallow: true });
+    };
 
     return (
         <>
@@ -102,40 +141,10 @@ export default function ProductsPage() {
                     <div className="mx-auto h-[520px] max-w-6xl bg-gradient-to-b from-[var(--color-gradient-start)] via-[var(--color-gradient-middle)] to-[var(--color-gradient-end)] blur-2xl" />
                 </div>
 
-                <header className="sticky top-0 z-40 border-b border-border bg-primary-bg/70 backdrop-blur">
-                    <Container>
-                        <div className="flex h-16 items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <Link href="/" className="flex items-center gap-3">
-                                    <div className="grid h-10 w-10 place-items-center rounded-2xl bg-secondary-bg ring-1 ring-border">
-                                        <SparkleIcon className="h-5 w-5 text-emerald-accent" />
-                                    </div>
-                                    <div className="leading-tight">
-                                        <p className="text-sm font-semibold tracking-tight">Crystal Atelier</p>
-                                        <p className="text-xs text-text-dim">Modern crystal jewellery</p>
-                                    </div>
-                                </Link>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    className="hidden rounded-full bg-secondary-bg px-4 py-2 text-sm text-text-light ring-1 ring-border transition hover:bg-accent-bg sm:inline-flex"
-                                >
-                                    Search
-                                </button>
-                                {isAuthenticated ? <Button variant="secondary" type="button" href="/cart">
-                                    Bag ({items.length})
-                                </Button> : <Button variant="secondary" type="button">
-                                    Sign In
-                                </Button>}
-                            </div>
-                        </div>
-                    </Container>
-                </header>
+                <Header />
 
                 <main>
-                    <section className="pt-12 sm:pt-16">
+                    <section className="pt-12 sm:pt-16 mb-16">
                         <Container>
                             <div className="mb-8">
                                 <Link href="/" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-primary-text">
@@ -144,7 +153,7 @@ export default function ProductsPage() {
                                 </Link>
                             </div>
 
-                            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+                            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between my-4">
                                 <SectionTitle
                                     eyebrow="All Products"
                                     title="Every piece, every crystal"
@@ -152,45 +161,67 @@ export default function ProductsPage() {
                                 />
                             </div>
 
-                            <div className="mt-8 flex flex-wrap gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => handleCategoryChange("")}
-                                    className={`rounded-full px-4 py-2 text-sm font-medium ring-1 transition ${selectedCategory === ""
-                                        ? "bg-accent-bg text-primary-text ring-border"
-                                        : "bg-secondary-bg text-text-muted ring-border hover:bg-accent-bg hover:text-primary-text"
-                                        }`}
-                                >
-                                    All
-                                </button>
-                                {categories.map((cat) => (
-                                    <button
-                                        key={cat.value}
-                                        type="button"
-                                        onClick={() => handleCategoryChange(cat.value)}
-                                        className={`rounded-full px-4 py-2 text-sm font-medium ring-1 transition ${selectedCategory === cat.value
-                                            ? "bg-accent-bg text-primary-text ring-border"
-                                            : "bg-secondary-bg text-text-muted ring-border hover:bg-accent-bg hover:text-primary-text"
-                                            }`}
-                                    >
-                                        {cat.label}
-                                    </button>
-                                ))}
-                            </div>
+                            {/* Desktop: Sidebar layout, Mobile: Stacked layout */}
+                            <div className="flex gap-8">
+                                {/* Sidebar - Always render but conditionally show */}
+                                <SearchFilters
+                                    onFiltersChange={handleFiltersChange}
+                                    initialFilters={filters}
+                                />
 
-                            {loading ? (
-                                <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                                    {Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />)}
+                                {/* Main Content */}
+                                <div className="flex-1 min-w-0">
+                                    {loading ? (
+                                        <div className="flex items-center justify-center py-12">
+                                            <div className="text-text-muted">Loading products...</div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                                {products.map((p: Product) => (
+                                                    <ProductCard key={p.id} product={p} />
+                                                ))}
+                                            </div>
+
+                                            {/* Loading more indicator */}
+                                            {loadingMore && (
+                                                <div className="flex items-center justify-center py-8">
+                                                    <div className="text-text-muted">Loading more products...</div>
+                                                </div>
+                                            )}
+
+                                            {/* No more products indicator */}
+                                            {!loadingMore && !hasMore && products.length > 0 && (
+                                                <div className="flex items-center justify-center py-8">
+                                                    <div className="text-text-muted text-sm">No more products to load</div>
+                                                </div>
+                                            )}
+
+                                            {products.length === 0 && (
+                                                <div className="flex items-center justify-center py-12">
+                                                    <div className="text-center">
+                                                        <p className="text-text-muted mb-4">No products found matching your criteria.</p>
+                                                        <Button variant="outline" onClick={() => handleFiltersChange({
+                                                            q: "",
+                                                            category: "",
+                                                            minPrice: "",
+                                                            maxPrice: "",
+                                                            minRating: "",
+                                                            sortBy: "createdAt",
+                                                            order: "desc",
+                                                        })}>
+                                                            Clear Filters
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
-                            ) : (
-                                <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                                    {products.map((p: Product) => (
-                                        <ProductCard key={p.id} product={p} />
-                                    ))}
-                                </div>
-                            )}
+                            </div>
                         </Container>
                     </section>
+                    <Footer />
                 </main>
             </div>
         </>

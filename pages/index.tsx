@@ -3,18 +3,17 @@ import Link from "next/link";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
-import { Divider } from "@/components/Divider";
 import { FeatureItem } from "@/components/FeatureItem";
 import { ArrowRightIcon, SparkleIcon, StarIcon } from "@/components/Icons";
 import { GemIcon, LeafIcon, ShieldIcon, TruckIcon } from "@/components/MiniIcon";
 import { ProductCard } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
-import { useEffect, useState } from "react";
-import { signInWithGoogle } from "@/services/login.service";
+import { useState } from "react";
 import toast from "react-hot-toast";
-import { useCart } from "@/providers/CartProvider";
-import { useAuth } from "@/providers/AuthProvider";
 import type { Product } from "@/generated/prisma/client";
+import prisma from "@/config/prisma.config";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 const categories = [
   { name: "Rings", desc: "Bold facets, perfect fit", slug: "rings" },
@@ -48,39 +47,43 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-function ProductCardSkeleton() {
-  return (
-    <div className="group relative overflow-hidden rounded-3xl bg-secondary-bg ring-1 ring-border">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
-        <div className="absolute -left-16 -top-16 h-40 w-40 rounded-full bg-[color-mix(in srgb, rgba(52, 211, 153, 0.4) 25%, transparent)] blur-2xl" />
-        <div className="absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-[color-mix(in srgb, rgba(236, 72, 153, 0.4) 25%, transparent)] blur-2xl" />
-      </div>
-      <div className="block">
-        <div className="p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="h-5 bg-gray-300 rounded animate-pulse mb-2"></div>
-              <div className="h-4 bg-gray-300 rounded animate-pulse w-3/4"></div>
-            </div>
-          </div>
-          <div className="mt-5 grid grid-cols-[1fr_auto] items-end gap-4">
-            <div>
-              <div className="h-4 bg-gray-300 rounded animate-pulse w-12 mb-1"></div>
-              <div className="h-6 bg-gray-300 rounded animate-pulse w-16"></div>
-            </div>
-          </div>
-          <div className="mt-6">
-            <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
-              <div className="relative aspect-[4/3] w-full bg-gray-300 animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-        <div className="p-5 pt-0">
-          <div className="w-full h-9 bg-gray-300 rounded-full animate-pulse"></div>
-        </div>
-      </div>
-    </div>
-  );
+export async function getStaticProps() {
+  const products = await prisma.product.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 8,
+    include: {
+      reviews: {
+        select: {
+          rating: true
+        }
+      }
+    }
+  });
+
+  // Calculate average ratings for each product
+  const productsWithRatings = products.map(product => {
+    const totalReviews = product.reviews.length;
+    const averageRating = totalReviews > 0
+      ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+      : 0;
+
+    return {
+      ...product,
+      averageRating: Math.round(averageRating * 10) / 10,
+      totalReviews
+    };
+  });
+
+  return {
+    props: {
+      products: productsWithRatings.map(p => ({
+        ...p,
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    },
+    revalidate: 60, // Revalidate every minute
+  };
 }
 
 function scrollToSection(id: string) {
@@ -90,45 +93,8 @@ function scrollToSection(id: string) {
   }
 }
 
-function NavLink({ children }: { children: string }) {
-  return (
-    <a
-      href="#"
-      className="text-sm text-text-muted transition hover:text-primary-text"
-    >
-      {children}
-    </a>
-  );
-}
-
-export default function Home() {
-  const { isAuthenticated, refresh } = useAuth();
-  const { items } = useCart();
-
-  const [signedIn, setSignedIn] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function Home({ products }: { products: Product[] }) {
   const [email, setEmail] = useState("");
-
-  const _signInWithGoogle = async () => {
-    const signedIn = await signInWithGoogle();
-    if (signedIn) toast.success("Signed in successfully!");
-    else toast.error("Sign in failed. Please try again.");
-    setSignedIn(signedIn);
-    if (signedIn) refresh();
-  }// ; Prettify later => @trishantpahwa | 2025-12-25 00:44:39
-
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("/api/products");
-      const data = await response.json();
-      if (response.ok) setProducts(data.products);
-    } catch (error) {
-      console.error("Failed to fetch products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,14 +103,6 @@ export default function Home() {
     toast.success("Subscribed successfully!");
     setEmail("");
   };
-
-  useEffect(() => {
-    setSignedIn(isAuthenticated);
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
   return (
     <>
@@ -161,42 +119,7 @@ export default function Home() {
           <div className="mx-auto h-[520px] max-w-6xl bg-gradient-to-b from-[var(--color-gradient-start)] via-[var(--color-gradient-middle)] to-[var(--color-gradient-end)] blur-2xl" />
         </div>
 
-        <header className="sticky top-0 z-40 border-b border-border bg-primary-bg/70 backdrop-blur">
-          <Container>
-            <div className="flex h-16 items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-secondary-bg ring-1 ring-border">
-                  <GemIcon className="h-5 w-5 text-emerald-accent" />
-                </div>
-                <div className="leading-tight">
-                  <p className="text-sm font-semibold tracking-tight">Crystal Atelier</p>
-                  <p className="text-xs text-text-dim">Modern crystal jewellery</p>
-                </div>
-              </div>
-
-              <nav className="hidden items-center gap-7 md:flex">
-                <NavLink>New</NavLink>
-                <NavLink>Best sellers</NavLink>
-                <NavLink>Gifts</NavLink>
-                <NavLink>About</NavLink>
-              </nav>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="hidden rounded-full bg-secondary-bg px-4 py-2 text-sm text-text-light ring-1 ring-border transition hover:bg-accent-bg sm:inline-flex"
-                >
-                  Search
-                </button>
-                {signedIn ? <Button variant="secondary" type="button" href="/cart">
-                  Bag ({items.length})
-                </Button> : <Button variant="secondary" type="button" onClick={_signInWithGoogle}>
-                  Sign In
-                </Button>}
-              </div>
-            </div>
-          </Container>
-        </header>
+        <Header />
 
         <main>
           <section className="pt-12 sm:pt-16">
@@ -338,11 +261,9 @@ export default function Home() {
               </div>
 
               <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {loading
-                  ? Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />)
-                  : products.map((p: Product) => (
-                    <ProductCard key={p.name} product={p} />
-                  ))}
+                {products.slice(0, 8).map((p: Product) => (
+                  <ProductCard key={p.name} product={p} />
+                ))}
               </div>
             </Container>
           </section>
@@ -511,89 +432,7 @@ export default function Home() {
           </section>
         </main>
 
-        <footer className="border-t border-border">
-          <Container>
-            <div className="py-10">
-              <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-2xl bg-secondary-bg ring-1 ring-border">
-                      <GemIcon className="h-5 w-5 text-emerald-accent" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">Crystal Atelier</p>
-                      <p className="text-xs text-text-dim">Modern crystal jewellery</p>
-                    </div>
-                  </div>
-                  <p className="mt-4 max-w-sm text-sm leading-6 text-text-subtle">
-                    Sleek silhouettes, luminous crystals, and calm luxury.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-disabled">
-                      Shop
-                    </p>
-                    <div className="space-y-2">
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Rings
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Necklaces
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Earrings
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-disabled">
-                      Company
-                    </p>
-                    <div className="space-y-2">
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        About
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Sustainability
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Careers
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-disabled">
-                      Support
-                    </p>
-                    <div className="space-y-2">
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Shipping
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Returns
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Contact
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-10">
-                <Divider />
-                <div className="mt-6 flex flex-col gap-3 text-xs text-text-faint sm:flex-row sm:items-center sm:justify-between">
-                  <p>© {new Date().getFullYear()} Crystal Atelier. All rights reserved.</p>
-                  <p className="text-text-very-faint">Crafted with Tailwind + React</p>
-                </div>
-              </div>
-            </div>
-          </Container>
-        </footer>
+        <Footer />
       </div>
     </>
   );

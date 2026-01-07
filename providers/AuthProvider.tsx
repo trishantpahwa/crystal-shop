@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { signOutUser } from "@/services/login.service";
 
 type AuthState = {
     isAuthenticated: boolean;
@@ -6,6 +7,7 @@ type AuthState = {
     token: string | null;
     refreshToken: string | null;
     refresh: () => void;
+    logout: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -32,6 +34,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTokens(readTokensFromLocalStorage());
     };
 
+    const logout = async () => {
+        const success = await signOutUser();
+        if (success) {
+            setTokens({ token: null, refreshToken: null });
+        }
+        return success;
+    };
+
     useEffect(() => {
         // Initial client-side hydration check
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -50,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const value = useMemo<AuthState>(() => {
         const isAuthenticated = Boolean(token && refreshToken);
-        return { isAuthenticated, loading, token, refreshToken, refresh };
+        return { isAuthenticated, loading, token, refreshToken, refresh, logout };
     }, [token, refreshToken, loading]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

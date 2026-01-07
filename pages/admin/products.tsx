@@ -2,6 +2,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/router";
+import { GetServerSidePropsContext } from "next";
 import toast from "react-hot-toast";
 import { upload as vercelUpload } from "@vercel/blob/client";
 
@@ -9,6 +10,7 @@ import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { Divider } from "@/components/Divider";
 import { SectionTitle } from "@/components/SectionTitle";
+import { signOutAdmin } from "@/services/login.service";
 
 type SortBy = "createdAt" | "updatedAt" | "name" | "price" | "tone" | "tag";
 
@@ -78,7 +80,7 @@ function buildProductsUrl(params: {
     return `/api/products?${search.toString()}`;
 }
 
-export default function AdminProductPage() {
+export default function AdminProductPage({ initialProducts }: { initialProducts: Product[] }) {
     const router = useRouter();
 
     const [q, setQ] = useState("");
@@ -90,7 +92,7 @@ export default function AdminProductPage() {
     const [skip, setSkip] = useState(0);
     const [take, setTake] = useState(24);
 
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<Product[]>(initialProducts);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -290,7 +292,7 @@ export default function AdminProductPage() {
             const pathname = `products/${Date.now()}`;
             const result = await vercelUpload(pathname, file, { handleUploadUrl: "/api/blob/upload", access: 'public' });
             return typeof result === "string" ? result : (result as { url?: string })?.url ?? "";
-        } catch (_e) {
+        } catch {
             toast.error("Image upload failed");
             return "";
         }
@@ -343,7 +345,7 @@ export default function AdminProductPage() {
                                 />
                                 <Button
                                     onClick={() => {
-                                        localStorage.removeItem("adminToken");
+                                        signOutAdmin();
                                         router.push("/admin/login");
                                     }}
                                     variant="outline"
@@ -386,8 +388,8 @@ export default function AdminProductPage() {
                                     <input
                                         className={inputClassName}
                                         placeholder="Price (string)"
-                                        value={`₹ ${createForm.price}`}
-                                        onChange={(e) => setCreateForm((s) => ({ ...s, price: e.target.value.split("₹ ")[1] }))}
+                                        value={createForm.price}
+                                        onChange={(e) => setCreateForm((s) => ({ ...s, price: e.target.value }))}
                                     />
                                     <input
                                         className={inputClassName}
@@ -699,4 +701,46 @@ export default function AdminProductPage() {
             </div>
         </>
     );
+}
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+    const { req } = context;
+    const token = req.cookies['admin-token']; // Assuming token is stored in cookie
+
+    if (!token) {
+        return {
+            redirect: {
+                destination: '/admin/login',
+                permanent: false,
+            },
+        };
+    }
+
+    // Verify token
+    const { verifyAdminToken } = await import('@/config/admin-auth.config');
+    if (!verifyAdminToken(token)) {
+        return {
+            redirect: {
+                destination: '/admin/login',
+                permanent: false,
+            },
+        };
+    }
+
+    // Optionally fetch initial products
+    const prisma = (await import('@/config/prisma.config')).default;
+    const products = await prisma.product.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 24,
+    });
+
+    return {
+        props: {
+            initialProducts: products.map(p => ({
+                ...p,
+                createdAt: p.createdAt.toISOString(),
+                updatedAt: p.updatedAt.toISOString(),
+            })),
+        },
+    };
 }

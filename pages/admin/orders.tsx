@@ -1,13 +1,17 @@
+"use client";
+
 import Head from "next/head";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import { GetServerSidePropsContext } from "next";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { Divider } from "@/components/Divider";
 import { SectionTitle } from "@/components/SectionTitle";
+import { signOutAdmin } from "@/services/login.service";
 
 type OrderStatus = "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 
@@ -65,14 +69,14 @@ function getStatusColor(status: OrderStatus) {
     }
 }
 
-export default function AdminOrdersPage() {
+export default function AdminOrdersPage({ initialOrders }: { initialOrders: Order[] }) {
     const router = useRouter();
 
     const [status, setStatus] = useState<OrderStatus | "all">("all");
     const skip = 0;
     const take = 50;
 
-    const [orders, setOrders] = useState<Order[]>([]);
+    const [orders, setOrders] = useState<Order[]>(initialOrders);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
@@ -83,6 +87,16 @@ export default function AdminOrdersPage() {
             router.push("/admin/login");
         }
     }, [router]);
+
+    // Initialize status from URL query parameter
+    useEffect(() => {
+        const statusQuery = router.query.status as string;
+        if (statusQuery && (STATUS_OPTIONS.includes(statusQuery as OrderStatus) || statusQuery === "all")) {
+            setStatus(statusQuery as OrderStatus | "all");
+        } else {
+            setStatus("all");
+        }
+    }, [router.query.status]);
 
     const fetchOrders = useCallback(async () => {
         setLoading(true);
@@ -198,7 +212,7 @@ export default function AdminOrdersPage() {
                         <SectionTitle title="Order Management" />
                         <Button
                             onClick={() => {
-                                localStorage.removeItem("adminToken");
+                                signOutAdmin();
                                 router.push("/admin/login");
                             }}
                             variant="outline"
@@ -235,7 +249,17 @@ export default function AdminOrdersPage() {
                             </label>
                             <select
                                 value={status}
-                                onChange={(e) => setStatus(e.target.value as OrderStatus | "all")}
+                                onChange={(e) => {
+                                    const newStatus = e.target.value as OrderStatus | "all";
+                                    setStatus(newStatus);
+                                    const query = { ...router.query };
+                                    if (newStatus === "all") {
+                                        delete query.status;
+                                    } else {
+                                        query.status = newStatus;
+                                    }
+                                    router.push({ pathname: router.pathname, query }, undefined, { shallow: true });
+                                }}
                                 className="w-full rounded-2xl bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] px-4 py-2.5 text-sm text-[var(--color-primary-text)] ring-1 ring-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in srgb, var(--color-emerald-accent) 30%, transparent)]"
                             >
                                 <option value="all">All Orders</option>
@@ -338,10 +362,11 @@ export default function AdminOrdersPage() {
                                                     className="flex items-center gap-3 p-3 bg-primary-bg rounded-lg"
                                                 >
                                                     <div className="relative w-12 h-12 flex-shrink-0">
-                                                        <img
+                                                        <Image
                                                             src={item.product.imageSrc}
                                                             alt={item.product.imageAlt}
-                                                            className="w-full h-full object-cover rounded"
+                                                            fill
+                                                            className="object-cover rounded"
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -367,4 +392,76 @@ export default function AdminOrdersPage() {
             </div>
         </>
     );
+}
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+    const { req } = context;
+    const token = req.cookies['admin-token'];
+
+    if (!token) {
+        return {
+            redirect: {
+                destination: '/admin/login',
+                permanent: false,
+            },
+        };
+    }
+
+    const { verifyAdminToken } = await import('@/config/admin-auth.config');
+    if (!verifyAdminToken(token)) {
+        return {
+            redirect: {
+                destination: '/admin/login',
+                permanent: false,
+            },
+        };
+    }
+    // Fetch initial orders
+    const prisma = (await import('@/config/prisma.config')).default;
+    const orders = await prisma.order.findMany({
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    phoneNumber: true,
+                },
+            },
+            items: {
+                include: {
+                    product: {
+                        select: {
+                            id: true,
+                            name: true,
+                            subtitle: true,
+                            images: true,
+                        },
+                    },
+                },
+            },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20, // Initial load
+    });
+
+    return {
+        props: {
+            initialOrders: orders.map(order => ({
+                ...order,
+                createdAt: order.createdAt.toISOString(),
+                updatedAt: order.updatedAt.toISOString(),
+                items: order.items.map(item => ({
+                    ...item,
+                    createdAt: item.createdAt.toISOString(),
+                    updatedAt: item.updatedAt.toISOString(),
+                    product: {
+                        ...item.product,
+                        imageSrc: Array.isArray(item.product.images) ? (item.product.images[0] as { src: string })?.src || '' : '',
+                        imageAlt: Array.isArray(item.product.images) ? (item.product.images[0] as { alt: string })?.alt || '' : '',
+                    },
+                })),
+            })),
+        },
+    };
 }

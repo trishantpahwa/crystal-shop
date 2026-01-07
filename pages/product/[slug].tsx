@@ -1,51 +1,65 @@
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { GetStaticPropsContext } from "next";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { ArrowLeftIcon, SparkleIcon } from "@/components/Icons";
+import { ShareButtons } from "@/components/ShareButtons";
 import { useCart } from "@/providers/CartProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import toast from "react-hot-toast";
-import type { Product } from "@/generated/prisma/client";
+import type { Product, Review } from "@/generated/prisma/client";
 import Link from "next/link";
+import prisma from "@/config/prisma.config";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
-export default function ProductPage() {
-    const router = useRouter();
-    const { slug } = router.query;
+type ReviewWithUser = Review & { user: { name: string | null } };
+
+function ProductPage({ product, averageRating, totalReviews, reviews }: { product: Product | null; averageRating: number; totalReviews: number; reviews: ReviewWithUser[] }) {
+
     const { addToCart, loading } = useCart();
     const { isAuthenticated } = useAuth();
+    const router = useRouter();
 
-    const [product, setProduct] = useState<Product | null>(null);
-    const [loadingProduct, setLoadingProduct] = useState(true);
     const [selectedImage, setSelectedImage] = useState(0);
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState("");
+    const [submittingReview, setSubmittingReview] = useState(false);
+    const [hasPurchased, setHasPurchased] = useState(false);
+    const [checkingPurchase, setCheckingPurchase] = useState(false);
+
+    const checkPurchaseStatus = useCallback(async () => {
+        if (!product) return;
+
+        setCheckingPurchase(true);
+        try {
+            const response = await fetch(`/api/orders?productId=${product.id}`, {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setHasPurchased(data.hasPurchased || false);
+            }
+        } catch (error) {
+            console.error("Error checking purchase status:", error);
+        } finally {
+            setCheckingPurchase(false);
+        }
+    }, [product]);
 
     useEffect(() => {
-        if (!slug) return;
-
-        const fetchProduct = async () => {
-            try {
-                const response = await fetch(`/api/product/${slug}`);
-                const data = await response.json();
-                if (response.ok) {
-                    setProduct(data.product);
-                } else {
-                    toast.error("Product not found");
-                    router.push("/");
-                }
-            } catch (error) {
-                console.error("Failed to fetch product:", error);
-                toast.error("Failed to load product");
-                router.push("/");
-            } finally {
-                setLoadingProduct(false);
-            }
-        };
-
-        fetchProduct();
-    }, [slug, router]);
+        if (isAuthenticated && product) {
+            checkPurchaseStatus();
+        }
+    }, [isAuthenticated, product, checkPurchaseStatus]);
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -61,13 +75,41 @@ export default function ProductPage() {
         }
     };
 
-    if (loadingProduct) {
-        return (
-            <div className="min-h-screen bg-primary-bg text-primary-text flex items-center justify-center">
-                <p>Loading...</p>
-            </div>
-        );
-    }
+    const handleSubmitReview = async () => {
+        if (!product || !isAuthenticated) return;
+
+        setSubmittingReview(true);
+        try {
+            const response = await fetch("/api/reviews", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({
+                    productId: product.id,
+                    rating: reviewRating,
+                    comment: reviewComment.trim() || undefined,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || "Failed to submit review");
+            }
+
+            toast.success("Review submitted successfully!");
+            setShowReviewForm(false);
+            setReviewComment("");
+            setReviewRating(5);
+            // Refresh the page to show the new review
+            window.location.reload();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to submit review");
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
 
     if (!product) {
         return (
@@ -82,35 +124,22 @@ export default function ProductPage() {
             <Head>
                 <title>{product.name} — Crystal Atelier</title>
                 <meta name="description" content={product.subtitle} />
+                <meta property="og:title" content={`${product.name} — Crystal Atelier`} />
+                <meta property="og:description" content={product.subtitle} />
+                <meta property="og:image" content={((product as Product).images as { src: string; alt: string }[])?.[0]?.src} />
+                <meta property="og:url" content={`/product/${product.id}`} />
+                <meta property="og:type" content="product" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={`${product.name} — Crystal Atelier`} />
+                <meta name="twitter:description" content={product.subtitle} />
+                <meta name="twitter:image" content={((product as Product).images as { src: string; alt: string }[])?.[0]?.src} />
             </Head>
 
             <div className="min-h-screen bg-primary-bg text-primary-text">
-                <header className="sticky top-0 z-40 border-b border-border bg-primary-bg/70 backdrop-blur">
-                    <Container>
-                        <div className="flex h-16 items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <Link href="/" className="flex items-center gap-3">
-                                    <div className="grid h-10 w-10 place-items-center rounded-2xl bg-secondary-bg ring-1 ring-border">
-                                        <SparkleIcon className="h-5 w-5 text-emerald-accent" />
-                                    </div>
-                                    <div className="leading-tight">
-                                        <p className="text-sm font-semibold tracking-tight">Crystal Atelier</p>
-                                        <p className="text-xs text-text-dim">Modern crystal jewellery</p>
-                                    </div>
-                                </Link>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Button variant="secondary" type="button" href="/cart">
-                                    Bag
-                                </Button>
-                            </div>
-                        </div>
-                    </Container>
-                </header>
+                <Header />
 
                 <main className="pt-12 sm:pt-16">
-                    <Container>
+                    <Container className="mb-16">
                         <div className="mb-8">
                             <Link href="/" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-primary-text">
                                 <ArrowLeftIcon className="h-4 w-4" />
@@ -166,6 +195,15 @@ export default function ProductPage() {
                                     {product.subtitle}
                                 </p>
 
+                                <div className="mt-6">
+                                    <ShareButtons
+                                        url={`${typeof window !== 'undefined' ? window.location.origin : ''}${router.asPath}`}
+                                        title={`${product.name} - Crystal Atelier`}
+                                        description={product.subtitle}
+                                        image={((product as Product).images as { src: string; alt: string }[])?.[0]?.src}
+                                    />
+                                </div>
+
                                 <div className="mt-8 flex items-center gap-4">
                                     <div>
                                         <p className="text-sm text-text-disabled">Price</p>
@@ -188,7 +226,7 @@ export default function ProductPage() {
 
                                 <div className="mt-9 grid grid-cols-2 gap-3 sm:grid-cols-3">
                                     {[
-                                        { k: "4.9", v: "Avg rating" },
+                                        { k: averageRating > 0 ? `${averageRating.toString()}/5` : "No ratings", v: "Avg rating" },
                                         { k: "24h", v: "Dispatch" },
                                         { k: "30d", v: "Returns" },
                                     ].map((item) => (
@@ -203,9 +241,201 @@ export default function ProductPage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Reviews Section */}
+                        <div className="mt-16 border-t border-border pt-16">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-2xl font-semibold text-primary-text">
+                                    Customer Reviews ({totalReviews ?? 0})
+                                </h2>
+                                {isAuthenticated && hasPurchased && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setShowReviewForm(!showReviewForm)}
+                                    >
+                                        Write a Review
+                                    </Button>
+                                )}
+                                {isAuthenticated && !hasPurchased && !checkingPurchase && (
+                                    <div className="text-sm text-text-muted">
+                                        Purchase this product to leave a review
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Review Form */}
+                            {showReviewForm && (
+                                <div className="mt-8 rounded-2xl bg-secondary-bg p-6 ring-1 ring-border">
+                                    <h3 className="text-lg font-semibold text-primary-text mb-4">Write Your Review</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-primary-text mb-2">
+                                                Rating
+                                            </label>
+                                            <div className="flex gap-1">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <button
+                                                        key={star}
+                                                        onClick={() => setReviewRating(star)}
+                                                        className={`text-2xl ${star <= reviewRating ? "text-yellow-400" : "text-gray-300"
+                                                            }`}
+                                                    >
+                                                        ★
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-primary-text mb-2">
+                                                Comment (optional)
+                                            </label>
+                                            <textarea
+                                                value={reviewComment}
+                                                onChange={(e) => setReviewComment(e.target.value)}
+                                                className="w-full rounded-lg bg-primary-bg px-3 py-2 text-primary-text ring-1 ring-border focus:ring-2 focus:ring-emerald-accent"
+                                                rows={4}
+                                                placeholder="Share your thoughts about this product..."
+                                            />
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <Button
+                                                onClick={handleSubmitReview}
+                                                disabled={submittingReview}
+                                            >
+                                                {submittingReview ? "Submitting..." : "Submit Review"}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => setShowReviewForm(false)}
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Reviews List */}
+                            <div className="mt-8 space-y-6">
+                                {reviews && reviews.length > 0 ? (
+                                    reviews.map((review: ReviewWithUser) => (
+                                        <div key={review.id} className="rounded-2xl bg-secondary-bg p-6 ring-1 ring-border">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-sm font-medium text-primary-text">
+                                                        {review.user.name || "Anonymous"}
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        {[1, 2, 3, 4, 5].map((star) => (
+                                                            <span
+                                                                key={star}
+                                                                className={`text-sm ${star <= review.rating ? "text-yellow-400" : "text-gray-300"
+                                                                    }`}
+                                                            >
+                                                                ★
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="text-xs text-text-disabled">
+                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                </div>
+                                            </div>
+                                            {review.comment && (
+                                                <p className="mt-3 text-primary-text">{review.comment}</p>
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-text-muted">No reviews yet. Be the first to review this product!</p>
+                                )}
+                            </div>
+                        </div>
                     </Container>
+                    <Footer />
                 </main>
             </div>
         </>
     );
 }
+
+export async function getStaticPaths() {
+    const products = await prisma.product.findMany({
+        select: { id: true },
+    });
+
+    const paths = products.map((product: { id: number }) => ({
+        params: { slug: product.id.toString() },
+    }));
+
+    return {
+        paths,
+        fallback: 'blocking', // or 'true' for ISR
+    };
+}
+
+export async function getStaticProps(context: GetStaticPropsContext) {
+    if (!context.params || typeof context.params.slug !== 'string') {
+        return {
+            notFound: true,
+        };
+    }
+
+    const slug = context.params.slug;
+    const productId = Number(slug);
+
+    if (!productId) {
+        return {
+            notFound: true,
+        };
+    }
+
+    const product = await prisma.product.findUnique({
+        where: { id: productId },
+        include: {
+            reviews: {
+                include: {
+                    user: {
+                        select: { name: true }
+                    }
+                },
+                orderBy: { createdAt: "desc" }
+            }
+        }
+    });
+
+    if (!product) {
+        return {
+            notFound: true,
+        };
+    }
+
+    // Calculate average rating
+    const totalReviews = product.reviews.length;
+    const averageRating = totalReviews > 0
+        ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+        : 0;
+
+    // Exclude reviews from product to avoid serializing Date objects
+    const { reviews, ...productWithoutReviews } = product;
+
+    return {
+        props: {
+            product: {
+                ...productWithoutReviews,
+                createdAt: product.createdAt.toISOString(),
+                updatedAt: product.updatedAt.toISOString(),
+            },
+            averageRating: Math.round(averageRating * 10) / 10,
+            totalReviews,
+            reviews: reviews.map(review => ({
+                ...review,
+                createdAt: review.createdAt.toISOString(),
+                updatedAt: review.updatedAt.toISOString(),
+            })),
+        },
+        revalidate: 60, // Revalidate every minute
+    }
+}
+
+export default ProductPage;

@@ -1,3 +1,5 @@
+"use client";
+
 import Head from "next/head";
 import { Container } from "@/components/Container";
 import { Button } from "@/components/Button";
@@ -9,16 +11,41 @@ import { signInWithGoogle } from "@/services/login.service";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { useRouter } from "next/router";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 export default function Cart() {
     const { items, total, loading, updateQuantity, removeFromCart, refreshCart } = useCart();
     const { createOrder } = useOrders();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading: authLoading } = useAuth();
     const [signingIn, setSigningIn] = useState(false);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [showCheckout, setShowCheckout] = useState(false);
     const [shippingAddress, setShippingAddress] = useState("");
     const router = useRouter();
+
+    // Show loading while authentication is being determined
+    if (authLoading) {
+        return (
+            <>
+                <Head>
+                    <title>Cart — Crystal Atelier</title>
+                </Head>
+                <div className="min-h-screen bg-primary-bg text-primary-text">
+                    <Container className="py-16">
+                        <div className="mx-auto max-w-md text-center mb-16">
+                            <div className="animate-pulse">
+                                <div className="h-8 bg-secondary-bg rounded mb-4"></div>
+                                <div className="h-4 bg-secondary-bg rounded mb-2"></div>
+                                <div className="h-10 bg-secondary-bg rounded"></div>
+                            </div>
+                        </div>
+                        <Footer />
+                    </Container>
+                </div>
+            </>
+        );
+    }
 
     const handleSignIn = async () => {
         setSigningIn(true);
@@ -78,8 +105,9 @@ export default function Cart() {
                     <title>Cart — Crystal Atelier</title>
                 </Head>
                 <div className="min-h-screen bg-primary-bg text-primary-text">
+                    <Header />
                     <Container className="py-16">
-                        <div className="mx-auto max-w-md text-center">
+                        <div className="mx-auto max-w-md text-center mb-16">
                             <h1 className="text-3xl font-bold text-primary-text mb-4">Your Cart</h1>
                             <p className="text-text-muted mb-8">
                                 Please sign in to view your cart and checkout.
@@ -92,6 +120,7 @@ export default function Cart() {
                                 {signingIn ? "Signing in..." : "Sign In with Google"}
                             </Button>
                         </div>
+                        <Footer />
                     </Container>
                 </div>
             </>
@@ -104,6 +133,7 @@ export default function Cart() {
                 <title>Cart — Crystal Atelier</title>
             </Head>
             <div className="min-h-screen bg-primary-bg text-primary-text">
+                <Header />
                 <Container className="py-16">
                     <div className="mx-auto max-w-4xl">
                         <h1 className="text-3xl font-bold text-primary-text mb-8">Your Cart</h1>
@@ -268,6 +298,7 @@ export default function Cart() {
                         </div>
                     </div>
                 )}
+                <Footer />
             </div>
         </>
     );
