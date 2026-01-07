@@ -12,6 +12,8 @@ import toast from "react-hot-toast";
 import type { Product, Review } from "@/generated/prisma/client";
 import Link from "next/link";
 import prisma from "@/config/prisma.config";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 type ReviewWithUser = Review & { user: { name: string | null } };
 
@@ -122,32 +124,10 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
             </Head>
 
             <div className="min-h-screen bg-primary-bg text-primary-text">
-                <header className="sticky top-0 z-40 border-b border-border bg-primary-bg/70 backdrop-blur">
-                    <Container>
-                        <div className="flex h-16 items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <Link href="/" className="flex items-center gap-3">
-                                    <div className="grid h-10 w-10 place-items-center rounded-2xl bg-secondary-bg ring-1 ring-border">
-                                        <SparkleIcon className="h-5 w-5 text-emerald-accent" />
-                                    </div>
-                                    <div className="leading-tight">
-                                        <p className="text-sm font-semibold tracking-tight">Crystal Atelier</p>
-                                        <p className="text-xs text-text-dim">Modern crystal jewellery</p>
-                                    </div>
-                                </Link>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Button variant="secondary" type="button" href="/cart">
-                                    Bag
-                                </Button>
-                            </div>
-                        </div>
-                    </Container>
-                </header>
+                <Header />
 
                 <main className="pt-12 sm:pt-16">
-                    <Container>
+                    <Container className="mb-16">
                         <div className="mb-8">
                             <Link href="/" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-primary-text">
                                 <ArrowLeftIcon className="h-4 w-4" />
@@ -225,7 +205,7 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
 
                                 <div className="mt-9 grid grid-cols-2 gap-3 sm:grid-cols-3">
                                     {[
-                                        { k: averageRating > 0 ? averageRating.toString() : "No ratings", v: "Avg rating" },
+                                        { k: averageRating > 0 ? `${averageRating.toString()}/5` : "No ratings", v: "Avg rating" },
                                         { k: "24h", v: "Dispatch" },
                                         { k: "30d", v: "Returns" },
                                     ].map((item) => (
@@ -351,6 +331,7 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
                             </div>
                         </div>
                     </Container>
+                    <Footer />
                 </main>
             </div>
         </>
