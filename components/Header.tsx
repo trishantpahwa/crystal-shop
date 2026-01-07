@@ -91,17 +91,27 @@ export default function Header() {
                             </button>
                         </form>
                         {isAuthenticated ? (
-                            <div className="flex items-center gap-2">
-                                <Button variant="secondary" type="button" href="/cart">
-                                    Bag ({items.length})
+                            <div className="flex items-center gap-3 sm:gap-2">
+                                <Button variant="secondary" type="button" href="/cart" className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13l-1.1 5M7 13h10m0 0v8a2 2 0 01-2 2H9a2 2 0 01-2-2v-8z" />
+                                    </svg>
+                                    <span className="hidden xs:inline">Bag ({items.length})</span>
+                                    <span className="xs:hidden">({items.length})</span>
                                 </Button>
-                                <Button variant="outline" type="button" onClick={_logout}>
-                                    Log Out
+                                <Button variant="outline" type="button" onClick={_logout} className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Log Out</span>
                                 </Button>
                             </div>
                         ) : (
-                            <Button variant="secondary" type="button" onClick={_signInWithGoogle}>
-                                Sign In
+                            <Button variant="secondary" type="button" onClick={_signInWithGoogle} className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span className="hidden sm:inline">Sign In</span>
                             </Button>
                         )}
                     </div>
