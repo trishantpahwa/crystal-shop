@@ -86,6 +86,16 @@ export default function AdminOrdersPage() {
         }
     }, [router]);
 
+    // Initialize status from URL query parameter
+    useEffect(() => {
+        const statusQuery = router.query.status as string;
+        if (statusQuery && (STATUS_OPTIONS.includes(statusQuery as OrderStatus) || statusQuery === "all")) {
+            setStatus(statusQuery as OrderStatus | "all");
+        } else {
+            setStatus("all");
+        }
+    }, [router.query.status]);
+
     const fetchOrders = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -237,7 +247,17 @@ export default function AdminOrdersPage() {
                             </label>
                             <select
                                 value={status}
-                                onChange={(e) => setStatus(e.target.value as OrderStatus | "all")}
+                                onChange={(e) => {
+                                    const newStatus = e.target.value as OrderStatus | "all";
+                                    setStatus(newStatus);
+                                    const query = { ...router.query };
+                                    if (newStatus === "all") {
+                                        delete query.status;
+                                    } else {
+                                        query.status = newStatus;
+                                    }
+                                    router.push({ pathname: router.pathname, query }, undefined, { shallow: true });
+                                }}
                                 className="w-full rounded-2xl bg-[color-mix(in srgb, var(--color-primary-text) 5%, transparent)] px-4 py-2.5 text-sm text-[var(--color-primary-text)] ring-1 ring-[color-mix(in srgb, var(--color-primary-text) 10%, transparent)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in srgb, var(--color-emerald-accent) 30%, transparent)]"
                             >
                                 <option value="all">All Orders</option>

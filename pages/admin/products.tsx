@@ -386,8 +386,8 @@ export default function AdminProductPage() {
                                     <input
                                         className={inputClassName}
                                         placeholder="Price (string)"
-                                        value={`₹ ${createForm.price}`}
-                                        onChange={(e) => setCreateForm((s) => ({ ...s, price: e.target.value.split("₹ ")[1] }))}
+                                        value={createForm.price}
+                                        onChange={(e) => setCreateForm((s) => ({ ...s, price: e.target.value }))}
                                     />
                                     <input
                                         className={inputClassName}

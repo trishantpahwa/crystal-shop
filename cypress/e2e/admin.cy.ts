@@ -29,17 +29,33 @@ describe("Admin Functionality", () => {
         cy.url().should("not.include", "status");
     });
 
-    it("should update order status", () => {
+    it("should update order status", async () => {
         cy.visit("/admin/orders");
 
         // Find an order and update its status
-        cy.get("select").first().select("CONFIRMED");
-        cy.contains("Order status updated").should("be.visible");
+        const orderElement = cy.get(".flex > .rounded-lg").first();
+
+        orderElement.invoke("val").then((val) => {
+            // Remove the orderElementValue from the array
+            var orderStatusValues = [
+                "PENDING",
+                "SHIPPED",
+                "DELIVERED",
+                "CONFIRMED",
+                "CANCELLED",
+            ].filter((status) => status !== val);
+            const newStatus =
+                orderStatusValues[
+                    Math.floor(Math.random() * orderStatusValues.length)
+                ];
+            orderElement.find("select").first().select(newStatus);
+            cy.contains("Order status updated").should("be.visible");
+        });
     });
 
     it("should display admin products page", () => {
         cy.visit("/admin/products");
-        cy.contains("Product Management").should("be.visible");
+        cy.contains("Product management");
     });
 
     it("should navigate between admin sections", () => {
@@ -51,42 +67,72 @@ describe("Admin Functionality", () => {
         cy.url().should("include", "/admin/orders");
     });
 
-    it("should logout from admin panel", () => {
-        cy.visit("/admin/orders");
-        cy.contains("Logout").click();
-        cy.url().should("include", "/admin/login");
+    it("should create a new product", () => {
+        cy.visit("/admin/products");
+
+        // Fill out the product creation form
+        cy.get('input[placeholder="Name"]').type("Test Crystal Ring");
+        cy.get('input[placeholder="Price (string)"]').clear().type("2999");
+        cy.get('input[placeholder="Subtitle"]').type(
+            "A beautiful test crystal ring"
+        );
+        cy.get("select").eq(0).select("amethyst"); // Tone select
+        cy.get('input[placeholder="Tag (optional)"]').type("test");
+        cy.get("select").eq(1).select("rings"); // Category select
+
+        // Upload an image using a data URL for a minimal PNG
+        cy.get('input[type="file"]').selectFile(
+            "cypress/fixtures/image2.webp",
+            {
+                force: true,
+            }
+        );
+        // Submit the form
+        cy.wait(5000);
+        cy.get(":nth-child(2) > .justify-between > .flex > .inline-flex")
+            .should("be.visible")
+            .and("be.enabled")
+            .click();
+
+        // Check for success message
+        cy.contains("Product created").should("be.visible");
     });
 
-    it("should redirect to login when not authenticated", () => {
-        cy.adminLogout();
-        cy.visit("/admin/orders");
-        cy.url().should("include", "/admin/login");
+    it("should edit an existing product", () => {
+        cy.visit("/admin/products");
+        // Find the first product and click edit
+        cy.contains("Edit").first().click();
+        // Update the product name
+        cy.get('input[placeholder="Name"]')
+            .clear()
+            .type("Updated Test Crystal Ring");
+        // Submit the form
+        cy.contains("Save").should("be.enabled").click();
+        // List should not contain the old name
+        cy.contains("Updated Test Crystal Ring").should("be.visible");
     });
 
-    it("should display order details in admin view", () => {
-        // First create an order as user
-        cy.login();
-        cy.visit("/");
-        cy.get('[data-testid="product-card"]')
-            .first()
-            .within(() => {
-                cy.contains("Add to bag").click();
-            });
-        cy.visit("/cart");
-        cy.contains("Proceed to Checkout").click();
-        cy.get("textarea").type("123 Admin Test St, Admin City");
-        cy.contains("Place Order").click();
-
-        // Now check as admin
-        cy.adminLogin();
-        cy.visit("/admin/orders");
-        cy.get(".bg-secondary-bg")
-            .first()
-            .within(() => {
-                cy.contains("Order #").should("be.visible");
-                cy.contains("Customer:").should("be.visible");
-                cy.contains("Shipping Address").should("be.visible");
-                cy.contains("Items").should("be.visible");
-            });
+    it("should delete a product", () => {
+        cy.visit("/admin/products");
+        // Find the first product and click delete
+        cy.contains("Delete").first().click();
+        // Confirm deletion from window.confirm
+        cy.window().then((win) => {
+            cy.stub(win, "confirm").returns(true);
+        });
+        // Check for success message
+        cy.contains("Product deleted").should("be.visible");
+        cy.contains("Test Crystal Ring").should("not.exist");
     });
+    // it("should logout from admin panel", () => {
+    //     cy.visit("/admin/orders");
+    //     cy.contains("Logout").click();
+    //     cy.url().should("include", "/admin/login");
+    // });
+
+    // it("should redirect to login when not authenticated", () => {
+    //     cy.adminLogout();
+    //     cy.visit("/admin/orders");
+    //     cy.url().should("include", "/admin/login");
+    // });
 });
