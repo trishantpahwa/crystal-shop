@@ -138,7 +138,7 @@ export default function SearchFilters({ onFiltersChange, initialFilters = {} }: 
                                 placeholder="0"
                                 value={filters.minPrice || ""}
                                 onChange={(e) => updateFilters({ minPrice: e.target.value })}
-                                className="w-full rounded-lg bg-primary-bg px-3 py-2 text-sm ring-1 ring-border focus:ring-2 focus:ring-accent-border"
+                                className="w-full rounded-lg bg-primary-bg px-3 py-2 text-sm ring-1 ring-border focus:ring-2 focus:ring-accent-border [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 -moz-appearance:textfield"
                             />
                         </div>
 
@@ -151,7 +151,7 @@ export default function SearchFilters({ onFiltersChange, initialFilters = {} }: 
                                 placeholder="1000"
                                 value={filters.maxPrice || ""}
                                 onChange={(e) => updateFilters({ maxPrice: e.target.value })}
-                                className="w-full rounded-lg bg-primary-bg px-3 py-2 text-sm ring-1 ring-border focus:ring-2 focus:ring-accent-border"
+                                className="w-full rounded-lg bg-primary-bg px-3 py-2 text-sm ring-1 ring-border focus:ring-2 focus:ring-accent-border [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 -moz-appearance:textfield"
                             />
                         </div>
 
