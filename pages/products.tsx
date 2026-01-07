@@ -1,8 +1,8 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
-import { ArrowLeftIcon, SparkleIcon } from "@/components/Icons";
+import { ArrowLeftIcon } from "@/components/Icons";
 import { ProductCard } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
 import { useCart } from "@/providers/CartProvider";
@@ -10,91 +10,64 @@ import { useAuth } from "@/providers/AuthProvider";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type { Product } from "@/generated/prisma/client";
-import prisma from "@/config/prisma.config";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import SearchFilters from "@/components/SearchFilters";
 
-const categories = [
-    { value: "rings", label: "Rings" },
-    { value: "necklaces", label: "Necklaces" },
-    { value: "earrings", label: "Earrings" },
-    { value: "bracelets", label: "Bracelets" },
-];
+export default function ProductsPage() {
+    const router = useRouter();
 
-export async function getServerSideProps(context: any) {
-    const { category, page = "1" } = context.query;
-
-    const where: Record<string, unknown> = {};
-    const pageNum = Math.max(1, Number.parseInt(page as string, 10) || 1);
-    const take = 24;
-    const skip = (pageNum - 1) * take;
-
-    if (typeof category === "string" && category.trim()) {
-        const validCategory = category.trim().toUpperCase();
-        const validCategories = ["RINGS", "NECKLACES", "EARRINGS", "BRACELETS"];
-        if (validCategories.includes(validCategory)) {
-            where.category = validCategory;
-        }
-    }
-
-    const [products, totalCount] = await Promise.all([
-        prisma.product.findMany({
-            where,
-            orderBy: { createdAt: "desc" },
-            skip,
-            take,
-            include: {
-                reviews: {
-                    select: {
-                        rating: true
-                    }
-                }
-            }
-        }),
-        prisma.product.count({ where }),
-    ]);
-
-    // Calculate average ratings for each product
-    const productsWithRatings = products.map(product => {
-        const totalReviews = product.reviews.length;
-        const averageRating = totalReviews > 0
-            ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
-            : 0;
-
-        return {
-            ...product,
-            averageRating: Math.round(averageRating * 10) / 10,
-            totalReviews
-        };
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalCount: 0 }); // Might need a fix => @trishantpahwa | 2026-01-08 01:14:46
+    const [filters, setFilters] = useState({
+        q: router.query.q as string || "",
+        category: router.query.category as string || "",
+        minPrice: router.query.minPrice as string || "",
+        maxPrice: router.query.maxPrice as string || "",
+        minRating: router.query.minRating as string || "",
+        sortBy: router.query.sortBy as string || "createdAt",
+        order: router.query.order as string || "desc",
+        page: router.query.page as string || "1",
     });
 
-    const totalPages = Math.ceil(totalCount / take);
+    const fetchProducts = useCallback(async (currentFilters: typeof filters) => {
+        setLoading(true);
+        try {
+            const query = new URLSearchParams();
+            Object.entries(currentFilters).forEach(([key, value]) => {
+                if (value) query.set(key, value);
+            });
 
-    return {
-        props: {
-            products: productsWithRatings.map(p => ({
-                ...p,
-                createdAt: p.createdAt.toISOString(),
-                updatedAt: p.updatedAt.toISOString(),
-            })),
-            pagination: {
-                currentPage: pageNum,
-                totalPages,
-                totalCount,
-            },
-        },
-    };
-}
+            const response = await fetch(`/api/products?${query.toString()}`);
+            const data = await response.json();
+            setProducts(data.products);
+            // For simplicity, assume all products fit in one page for now
+            setPagination({ currentPage: 1, totalPages: 1, totalCount: data.products.length });
+        } catch (error) {
+            console.error("Failed to fetch products:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-export default function ProductsPage({ products, pagination }: { products: Product[], pagination: { currentPage: number, totalPages: number, totalCount: number } }) {
-    const router = useRouter();
-    const { isAuthenticated } = useAuth();
-    const { items } = useCart();
+    useEffect(() => {
+        fetchProducts(filters);
+    }, [filters, fetchProducts]);
 
-    const selectedCategory = (router.query.category as string) || "";
-
-    const handleCategoryChange = (category: string) => {
-        const query = category ? { category, page: "1" } : { page: "1" };
+    const handleFiltersChange = (newFilters: Partial<typeof filters>) => {
+        const updated = { ...filters, ...newFilters, page: "1" };
+        setFilters(updated);
+        // Update URL
+        const query = { ...router.query };
+        Object.keys(newFilters).forEach(key => {
+            if (newFilters[key as keyof typeof newFilters]) {
+                query[key] = newFilters[key as keyof typeof newFilters];
+            } else {
+                delete query[key];
+            }
+        });
+        query.page = "1";
         router.push({ pathname: "/products", query }, undefined, { shallow: true });
     };
 
@@ -125,7 +98,7 @@ export default function ProductsPage({ products, pagination }: { products: Produ
                                 </Link>
                             </div>
 
-                            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+                            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between my-4">
                                 <SectionTitle
                                     eyebrow="All Products"
                                     title="Every piece, every crystal"
@@ -133,68 +106,36 @@ export default function ProductsPage({ products, pagination }: { products: Produ
                                 />
                             </div>
 
-                            <div className="mt-8 flex flex-wrap gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => handleCategoryChange("")}
-                                    className={`rounded-full px-4 py-2 text-sm font-medium ring-1 transition ${selectedCategory === ""
-                                        ? "bg-accent-bg text-primary-text ring-border"
-                                        : "bg-secondary-bg text-text-muted ring-border hover:bg-accent-bg hover:text-primary-text"
-                                        }`}
-                                >
-                                    All
-                                </button>
-                                {categories.map((cat) => (
-                                    <button
-                                        key={cat.value}
-                                        type="button"
-                                        onClick={() => handleCategoryChange(cat.value)}
-                                        className={`rounded-full px-4 py-2 text-sm font-medium ring-1 transition ${selectedCategory === cat.value
-                                            ? "bg-accent-bg text-primary-text ring-border"
-                                            : "bg-secondary-bg text-text-muted ring-border hover:bg-accent-bg hover:text-primary-text"
-                                            }`}
-                                    >
-                                        {cat.label}
-                                    </button>
-                                ))}
+                            <div className="mt-2">
+                                <SearchFilters
+                                    onFiltersChange={handleFiltersChange}
+                                    initialFilters={filters}
+                                />
                             </div>
 
-                            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                                {products.map((p: Product) => (
-                                    <ProductCard key={p.id} product={p} />
-                                ))}
-                            </div>
-
-                            {pagination.totalPages > 1 && (
-                                <div className="mt-12 flex items-center justify-center gap-2">
-                                    <button
-                                        onClick={() => {
-                                            const newPage = Math.max(1, pagination.currentPage - 1);
-                                            const query = { ...router.query, page: newPage.toString() };
-                                            router.push({ pathname: "/products", query });
-                                        }}
-                                        disabled={pagination.currentPage === 1}
-                                        className="rounded-lg bg-secondary-bg px-3 py-2 text-sm font-medium text-text-muted ring-1 ring-border transition hover:bg-accent-bg hover:text-primary-text disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Previous
-                                    </button>
-
-                                    <span className="text-sm text-text-muted">
-                                        Page {pagination.currentPage} of {pagination.totalPages}
-                                    </span>
-
-                                    <button
-                                        onClick={() => {
-                                            const newPage = Math.min(pagination.totalPages, pagination.currentPage + 1);
-                                            const query = { ...router.query, page: newPage.toString() };
-                                            router.push({ pathname: "/products", query });
-                                        }}
-                                        disabled={pagination.currentPage === pagination.totalPages}
-                                        className="rounded-lg bg-secondary-bg px-3 py-2 text-sm font-medium text-text-muted ring-1 ring-border transition hover:bg-accent-bg hover:text-primary-text disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Next
-                                    </button>
+                            {loading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="text-text-muted">Loading products...</div>
                                 </div>
+                            ) : (
+                                <>
+                                    <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                                        {products.map((p: Product) => (
+                                            <ProductCard key={p.id} product={p} />
+                                        ))}
+                                    </div>
+
+                                    {products.length === 0 && (
+                                        <div className="flex items-center justify-center py-12">
+                                            <div className="text-center">
+                                                <p className="text-text-muted mb-4">No products found matching your criteria.</p>
+                                                <Button variant="outline" onClick={() => handleFiltersChange({})}>
+                                                    Clear Filters
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </Container>
                     </section>
