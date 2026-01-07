@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 export default function Cart() {
     const { items, total, loading, updateQuantity, removeFromCart, refreshCart } = useCart();
@@ -104,6 +105,7 @@ export default function Cart() {
                     <title>Cart — Crystal Atelier</title>
                 </Head>
                 <div className="min-h-screen bg-primary-bg text-primary-text">
+                    <Header />
                     <Container className="py-16">
                         <div className="mx-auto max-w-md text-center mb-16">
                             <h1 className="text-3xl font-bold text-primary-text mb-4">Your Cart</h1>
@@ -131,6 +133,7 @@ export default function Cart() {
                 <title>Cart — Crystal Atelier</title>
             </Head>
             <div className="min-h-screen bg-primary-bg text-primary-text">
+                <Header />
                 <Container className="py-16">
                     <div className="mx-auto max-w-4xl">
                         <h1 className="text-3xl font-bold text-primary-text mb-8">Your Cart</h1>
