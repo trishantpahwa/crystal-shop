@@ -271,7 +271,6 @@ export default function Orders({ initialOrders = [] }: { initialOrders: Order[] 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const { req } = context;
     const token = req.cookies['token'];
-    console.log(token);
 
     if (!token) {
         // No token, render page normally (client-side auth will handle)
