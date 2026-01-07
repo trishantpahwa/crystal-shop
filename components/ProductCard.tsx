@@ -8,7 +8,7 @@ import Link from "next/link";
 
 function CardChrome({ children }: { children: ReactNode }) {
     return (
-        <div className="group relative overflow-hidden rounded-3xl bg-secondary-bg ring-1 ring-border transition hover:bg-[color-mix(in srgb, var(--color-secondary-bg) 140%, transparent)]">
+        <div data-testid="product-card" className="group relative overflow-hidden rounded-3xl bg-secondary-bg ring-1 ring-border transition hover:bg-[color-mix(in srgb, var(--color-secondary-bg) 140%, transparent)]">
             <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
                 <div className="absolute -left-16 -top-16 h-40 w-40 rounded-full bg-[color-mix(in srgb, rgba(52, 211, 153, 0.4) 25%, transparent)] blur-2xl" />
                 <div className="absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-[color-mix(in srgb, rgba(236, 72, 153, 0.4) 25%, transparent)] blur-2xl" />
