@@ -201,7 +201,15 @@ export default function ProductsPage() {
                                                 <div className="flex items-center justify-center py-12">
                                                     <div className="text-center">
                                                         <p className="text-text-muted mb-4">No products found matching your criteria.</p>
-                                                        <Button variant="outline" onClick={() => handleFiltersChange({})}>
+                                                        <Button variant="outline" onClick={() => handleFiltersChange({
+                                                            q: "",
+                                                            category: "",
+                                                            minPrice: "",
+                                                            maxPrice: "",
+                                                            minRating: "",
+                                                            sortBy: "createdAt",
+                                                            order: "desc",
+                                                        })}>
                                                             Clear Filters
                                                         </Button>
                                                     </div>
