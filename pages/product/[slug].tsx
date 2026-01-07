@@ -33,12 +33,6 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
     const [hasPurchased, setHasPurchased] = useState(false);
     const [checkingPurchase, setCheckingPurchase] = useState(false);
 
-    useEffect(() => {
-        if (isAuthenticated && product) {
-            checkPurchaseStatus();
-        }
-    }, [isAuthenticated, product, checkPurchaseStatus]);
-
     const checkPurchaseStatus = useCallback(async () => {
         if (!product) return;
 
@@ -60,6 +54,12 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
             setCheckingPurchase(false);
         }
     }, [product]);
+
+    useEffect(() => {
+        if (isAuthenticated && product) {
+            checkPurchaseStatus();
+        }
+    }, [isAuthenticated, product, checkPurchaseStatus]);
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -375,7 +375,13 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps(context: GetStaticPropsContext) {
-    const { slug } = context.params;
+    if (!context.params || typeof context.params.slug !== 'string') {
+        return {
+            notFound: true,
+        };
+    }
+
+    const slug = context.params.slug;
     const productId = Number(slug);
 
     if (!productId) {
@@ -411,8 +417,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
         : 0;
 
     // Exclude reviews from product to avoid serializing Date objects
-    const productWithoutReviews = { ...product };
-    delete productWithoutReviews.reviews;
+    const { reviews, ...productWithoutReviews } = product;
 
     return {
         props: {
@@ -423,7 +428,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
             },
             averageRating: Math.round(averageRating * 10) / 10,
             totalReviews,
-            reviews: product.reviews.map(review => ({
+            reviews: reviews.map(review => ({
                 ...review,
                 createdAt: review.createdAt.toISOString(),
                 updatedAt: review.updatedAt.toISOString(),
