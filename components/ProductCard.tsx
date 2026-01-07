@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useCart } from "@/providers/CartProvider";
 import toast from "react-hot-toast";
 import { Product } from "@/generated/prisma/client";
@@ -19,14 +20,18 @@ function CardChrome({ children }: { children: ReactNode }) {
 }
 
 export function ProductCard({ product, averageRating, totalReviews }: { product: Product; averageRating?: number; totalReviews?: number }) {
-    const { addToCart, loading } = useCart();
+    const { addToCart } = useCart();
+    const [loading, setLoading] = useState(false);
 
     const handleAddToCart = async () => {
+        setLoading(true);
         try {
             await addToCart(product.id);
             toast.success(`${product.name} added to cart!`);
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Failed to add to cart");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -85,7 +90,7 @@ export function ProductCard({ product, averageRating, totalReviews }: { product:
                 <button
                     onClick={handleAddToCart}
                     disabled={loading}
-                    className="w-full rounded-full bg-accent-bg px-4 py-2 text-sm font-medium text-primary-text ring-1 ring-border transition hover:bg-[color-mix(in srgb, var(--color-accent-bg) 120%, transparent)] active:bg-accent-bg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-full cursor-pointer bg-accent-bg px-4 py-2 text-sm font-medium text-primary-text ring-1 ring-border transition hover:bg-[color-mix(in srgb, var(--color-accent-bg) 120%, transparent)] active:bg-accent-bg disabled:opacity-50 disabled:cursor-not-allowed"
                     type="button"
                 >
                     {loading ? "Adding..." : "Add to bag"}
