@@ -35,6 +35,9 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
         order = "desc",
         skip = "0",
         take = "24",
+        minPrice,
+        maxPrice,
+        minRating,
     } = request.query;
 
     const where: Record<string, unknown> = {};
@@ -55,6 +58,8 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
             { subtitle: { contains: q.trim(), mode: "insensitive" } },
         ];
     }
+
+    // Note: Price and rating filtering is done after fetching since price is stored as string
 
     const sortField: SortBy =
         typeof sortBy === "string" &&
@@ -99,5 +104,36 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
         };
     });
 
-    return response.status(200).json({ products: productsWithRatings });
+    // Filter by minRating after calculating ratings
+    let filteredProducts = productsWithRatings;
+    if (typeof minRating === "string" && minRating.trim()) {
+        const min = parseFloat(minRating.trim());
+        if (!isNaN(min)) {
+            filteredProducts = filteredProducts.filter(
+                (p) => p.averageRating >= min
+            );
+        }
+    }
+
+    // Filter by price range after fetching
+    if (typeof minPrice === "string" && minPrice.trim()) {
+        const min = parseFloat(minPrice.trim());
+        if (!isNaN(min)) {
+            filteredProducts = filteredProducts.filter((p) => {
+                const price = parseFloat(p.price.replace("$", ""));
+                return price >= min;
+            });
+        }
+    }
+    if (typeof maxPrice === "string" && maxPrice.trim()) {
+        const max = parseFloat(maxPrice.trim());
+        if (!isNaN(max)) {
+            filteredProducts = filteredProducts.filter((p) => {
+                const price = parseFloat(p.price.replace("$", ""));
+                return price <= max;
+            });
+        }
+    }
+
+    return response.status(200).json({ products: filteredProducts });
 }

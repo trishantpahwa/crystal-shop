@@ -6,6 +6,8 @@ import { signInWithGoogle } from "@/services/login.service";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
+import { useRouter } from "next/router";
+import { useState } from "react";
 
 
 function NavLink({ link, children }: { link: string; children: string }) {
@@ -23,6 +25,8 @@ export default function Header() {
 
     const { isAuthenticated, refresh, logout } = useAuth();
     const { items } = useCart();
+    const router = useRouter();
+    const [searchQuery, setSearchQuery] = useState("");
 
     const _signInWithGoogle = async () => {
         const signedIn = await signInWithGoogle();
@@ -40,6 +44,14 @@ export default function Header() {
         }
     };
 
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+        } else {
+            router.push("/products");
+        }
+    };
 
     return (
         <header className="sticky top-0 z-40 border-b border-border bg-primary-bg/70 backdrop-blur">
@@ -63,12 +75,21 @@ export default function Header() {
                     </nav>
 
                     <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            className="hidden rounded-full bg-secondary-bg px-4 py-2 text-sm text-text-light ring-1 ring-border transition hover:bg-accent-bg sm:inline-flex"
-                        >
-                            Search
-                        </button>
+                        <form onSubmit={handleSearch} className="hidden sm:flex">
+                            <input
+                                type="text"
+                                placeholder="Search products..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="rounded-l-full bg-secondary-bg px-4 py-2 text-sm ring-1 ring-border focus:ring-2 focus:ring-accent-border"
+                            />
+                            <button
+                                type="submit"
+                                className="rounded-r-full bg-secondary-bg px-4 py-2 text-sm ring-1 ring-border hover:bg-accent-bg transition"
+                            >
+                                Search
+                            </button>
+                        </form>
                         {isAuthenticated ? (
                             <div className="flex items-center gap-2">
                                 <Button variant="secondary" type="button" href="/cart">
