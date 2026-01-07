@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import { useCart } from "@/providers/CartProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import type { Product } from "@/generated/prisma/client";
+import prisma from "@/config/prisma.config";
 
 const categories = [
   { name: "Rings", desc: "Bold facets, perfect fit", slug: "rings" },
@@ -48,39 +49,22 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-function ProductCardSkeleton() {
-  return (
-    <div className="group relative overflow-hidden rounded-3xl bg-secondary-bg ring-1 ring-border">
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
-        <div className="absolute -left-16 -top-16 h-40 w-40 rounded-full bg-[color-mix(in srgb, rgba(52, 211, 153, 0.4) 25%, transparent)] blur-2xl" />
-        <div className="absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-[color-mix(in srgb, rgba(236, 72, 153, 0.4) 25%, transparent)] blur-2xl" />
-      </div>
-      <div className="block">
-        <div className="p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="h-5 bg-gray-300 rounded animate-pulse mb-2"></div>
-              <div className="h-4 bg-gray-300 rounded animate-pulse w-3/4"></div>
-            </div>
-          </div>
-          <div className="mt-5 grid grid-cols-[1fr_auto] items-end gap-4">
-            <div>
-              <div className="h-4 bg-gray-300 rounded animate-pulse w-12 mb-1"></div>
-              <div className="h-6 bg-gray-300 rounded animate-pulse w-16"></div>
-            </div>
-          </div>
-          <div className="mt-6">
-            <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
-              <div className="relative aspect-[4/3] w-full bg-gray-300 animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-        <div className="p-5 pt-0">
-          <div className="w-full h-9 bg-gray-300 rounded-full animate-pulse"></div>
-        </div>
-      </div>
-    </div>
-  );
+export async function getStaticProps() {
+  const products = await prisma.product.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 8,
+  });
+
+  return {
+    props: {
+      products: products.map(p => ({
+        ...p,
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    },
+    revalidate: 60, // Revalidate every minute
+  };
 }
 
 function scrollToSection(id: string) {
@@ -101,13 +85,11 @@ function NavLink({ children }: { children: string }) {
   );
 }
 
-export default function Home() {
+export default function Home({ products }: { products: Product[] }) {
   const { isAuthenticated, refresh } = useAuth();
   const { items } = useCart();
 
   const [signedIn, setSignedIn] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
 
   const _signInWithGoogle = async () => {
@@ -117,18 +99,6 @@ export default function Home() {
     setSignedIn(signedIn);
     if (signedIn) refresh();
   }// ; Prettify later => @trishantpahwa | 2025-12-25 00:44:39
-
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("/api/products");
-      const data = await response.json();
-      if (response.ok) setProducts(data.products);
-    } catch (error) {
-      console.error("Failed to fetch products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,10 +111,6 @@ export default function Home() {
   useEffect(() => {
     setSignedIn(isAuthenticated);
   }, [isAuthenticated]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
   return (
     <>
@@ -338,11 +304,9 @@ export default function Home() {
               </div>
 
               <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {loading
-                  ? Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />)
-                  : products.map((p: Product) => (
-                    <ProductCard key={p.name} product={p} />
-                  ))}
+                {products.slice(0, 8).map((p: Product) => (
+                  <ProductCard key={p.name} product={p} />
+                ))}
               </div>
             </Container>
           </section>

@@ -78,7 +78,7 @@ function buildProductsUrl(params: {
     return `/api/products?${search.toString()}`;
 }
 
-export default function AdminProductPage() {
+export default function AdminProductPage({ initialProducts }: { initialProducts: Product[] }) {
     const router = useRouter();
 
     const [q, setQ] = useState("");
@@ -90,7 +90,7 @@ export default function AdminProductPage() {
     const [skip, setSkip] = useState(0);
     const [take, setTake] = useState(24);
 
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<Product[]>(initialProducts);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -699,4 +699,46 @@ export default function AdminProductPage() {
             </div>
         </>
     );
+}
+
+export async function getServerSideProps(context: any) {
+    const { req } = context;
+    const token = req.cookies['admin-token']; // Assuming token is stored in cookie
+
+    if (!token) {
+        return {
+            redirect: {
+                destination: '/admin/login',
+                permanent: false,
+            },
+        };
+    }
+
+    // Verify token
+    const { verifyAdminToken } = await import('@/config/admin-auth.config');
+    if (!verifyAdminToken(token)) {
+        return {
+            redirect: {
+                destination: '/admin/login',
+                permanent: false,
+            },
+        };
+    }
+
+    // Optionally fetch initial products
+    const prisma = (await import('@/config/prisma.config')).default;
+    const products = await prisma.product.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 24,
+    });
+
+    return {
+        props: {
+            initialProducts: products.map(p => ({
+                ...p,
+                createdAt: p.createdAt.toISOString(),
+                updatedAt: p.updatedAt.toISOString(),
+            })),
+        },
+    };
 }
