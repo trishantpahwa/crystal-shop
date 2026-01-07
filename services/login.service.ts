@@ -1,4 +1,4 @@
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, provider } from "@/config/firebase.config";
 
 const signInWithGoogle = async () => {
@@ -28,4 +28,28 @@ const signInWithGoogle = async () => {
     }
 };
 
-export { signInWithGoogle };
+const signOutUser = async () => {
+    try {
+        await signOut(auth);
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        // Clear cookies if present
+        document.cookie =
+            "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie =
+            "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+const signOutAdmin = () => {
+    localStorage.removeItem("adminToken");
+    // Clear cookies if present
+    document.cookie =
+        "adminToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    return true;
+};
+
+export { signInWithGoogle, signOutUser, signOutAdmin };
