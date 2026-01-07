@@ -178,7 +178,7 @@ export default function Orders({ initialOrders = [] }: { initialOrders: Order[] 
                                         key={order.id}
                                         className="bg-secondary-bg rounded-2xl p-6 ring-1 ring-border"
                                     >
-                                        <div className="flex justify-between items-start mb-4">
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start mb-4">
                                             <div>
                                                 <h2 className="text-lg font-semibold text-primary-text">
                                                     Order #{order.id}
@@ -191,15 +191,15 @@ export default function Orders({ initialOrders = [] }: { initialOrders: Order[] 
                                                     })}
                                                 </p>
                                             </div>
-                                            <div className="text-right">
+                                            <div className="flex flex-col gap-2 sm:items-end">
                                                 <span
-                                                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium self-start sm:self-auto ${getStatusColor(
                                                         order.status
                                                     )}`}
                                                 >
                                                     {order.status}
                                                 </span>
-                                                <p className="text-primary-text font-semibold mt-1">
+                                                <p className="text-primary-text font-semibold">
                                                     ₹ {order.total}
                                                 </p>
                                             </div>

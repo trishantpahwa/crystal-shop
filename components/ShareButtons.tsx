@@ -52,21 +52,21 @@ export function ShareButtons({ url, title, description, image }: ShareButtonsPro
             </button>
             <button
                 onClick={() => handleShare('whatsapp')}
-                className="p-2 rounded-full bg-secondary-bg hover:bg-border transition-colors"
+                className="p-2 rounded-full bg-secondary-bg hover:bg-border transition-colors sm:hidden"
                 title="Share on WhatsApp"
             >
                 <WhatsAppIcon className="h-4 w-4 text-primary-text" />
             </button>
             <button
                 onClick={() => handleShare('instagram')}
-                className="p-2 rounded-full bg-secondary-bg hover:bg-border transition-colors"
+                className="p-2 rounded-full bg-secondary-bg hover:bg-border transition-colors hidden sm:inline-flex"
                 title="Share on Instagram"
             >
                 <InstagramIcon className="h-4 w-4 text-primary-text" />
             </button>
             <button
                 onClick={() => handleShare('pinterest')}
-                className="p-2 rounded-full bg-secondary-bg hover:bg-border transition-colors"
+                className="p-2 rounded-full bg-secondary-bg hover:bg-border transition-colors hidden sm:inline-flex"
                 title="Pin on Pinterest"
             >
                 <PinterestIcon className="h-4 w-4 text-primary-text" />
