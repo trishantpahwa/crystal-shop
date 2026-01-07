@@ -152,30 +152,32 @@ export default function Cart() {
                                     {items.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="flex gap-4 p-4 bg-secondary-bg rounded-2xl ring-1 ring-border"
+                                            className="flex flex-col gap-4 p-4 bg-secondary-bg rounded-2xl ring-1 ring-border sm:flex-row sm:items-center"
                                         >
-                                            <div className="relative w-20 h-20 flex-shrink-0">
-                                                <Image
-                                                    src={item.product.imageSrc}
-                                                    alt={item.product.imageAlt}
-                                                    fill
-                                                    className="object-cover rounded-lg"
-                                                />
+                                            <div className="flex gap-4 flex-1 min-w-0">
+                                                <div className="relative w-20 h-20 flex-shrink-0">
+                                                    <Image
+                                                        src={item.product.imageSrc}
+                                                        alt={item.product.imageAlt}
+                                                        fill
+                                                        className="object-cover rounded-lg"
+                                                    />
+                                                </div>
+
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="text-primary-text font-semibold truncate">
+                                                        {item.product.name}
+                                                    </h3>
+                                                    <p className="text-text-muted text-sm truncate">
+                                                        {item.product.subtitle}
+                                                    </p>
+                                                    <p className="text-primary-text font-semibold mt-1">
+                                                        ₹ {item.product.price}
+                                                    </p>
+                                                </div>
                                             </div>
 
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="text-primary-text font-semibold truncate">
-                                                    {item.product.name}
-                                                </h3>
-                                                <p className="text-text-muted text-sm truncate">
-                                                    {item.product.subtitle}
-                                                </p>
-                                                <p className="text-primary-text font-semibold mt-1">
-                                                    ₹ {item.product.price}
-                                                </p>
-                                            </div>
-
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-3 sm:gap-4">
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
@@ -199,7 +201,7 @@ export default function Cart() {
                                                 <button
                                                     onClick={() => handleRemove(item.productId)}
                                                     disabled={loading}
-                                                    className="text-text-disabled hover:text-primary-text text-sm"
+                                                    className="text-text-disabled hover:text-primary-text text-sm whitespace-nowrap"
                                                 >
                                                     Remove
                                                 </button>
