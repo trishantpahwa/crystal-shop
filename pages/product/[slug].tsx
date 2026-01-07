@@ -11,41 +11,14 @@ import { useAuth } from "@/providers/AuthProvider";
 import toast from "react-hot-toast";
 import type { Product } from "@/generated/prisma/client";
 import Link from "next/link";
+import prisma from "@/config/prisma.config";
 
-export default function ProductPage() {
+function ProductPage({ product }: { product: Product | null }) {
     const router = useRouter();
-    const { slug } = router.query;
     const { addToCart, loading } = useCart();
     const { isAuthenticated } = useAuth();
 
-    const [product, setProduct] = useState<Product | null>(null);
-    const [loadingProduct, setLoadingProduct] = useState(true);
     const [selectedImage, setSelectedImage] = useState(0);
-
-    useEffect(() => {
-        if (!slug) return;
-
-        const fetchProduct = async () => {
-            try {
-                const response = await fetch(`/api/product/${slug}`);
-                const data = await response.json();
-                if (response.ok) {
-                    setProduct(data.product);
-                } else {
-                    toast.error("Product not found");
-                    router.push("/");
-                }
-            } catch (error) {
-                console.error("Failed to fetch product:", error);
-                toast.error("Failed to load product");
-                router.push("/");
-            } finally {
-                setLoadingProduct(false);
-            }
-        };
-
-        fetchProduct();
-    }, [slug, router]);
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -60,14 +33,6 @@ export default function ProductPage() {
             toast.error(error instanceof Error ? error.message : "Failed to add to cart");
         }
     };
-
-    if (loadingProduct) {
-        return (
-            <div className="min-h-screen bg-primary-bg text-primary-text flex items-center justify-center">
-                <p>Loading...</p>
-            </div>
-        );
-    }
 
     if (!product) {
         return (
@@ -209,3 +174,52 @@ export default function ProductPage() {
         </>
     );
 }
+
+export async function getStaticPaths() {
+    const products = await prisma.product.findMany({
+        select: { id: true },
+    });
+
+    const paths = products.map((product) => ({
+        params: { slug: product.id.toString() },
+    }));
+
+    return {
+        paths,
+        fallback: 'blocking', // or 'true' for ISR
+    };
+}
+
+export async function getStaticProps(context: any) {
+    const { slug } = context.params;
+    const productId = Number(slug);
+
+    if (!productId) {
+        return {
+            notFound: true,
+        };
+    }
+
+    const product = await prisma.product.findUnique({
+        where: { id: productId },
+    });
+
+    if (!product) {
+        return {
+            notFound: true,
+        };
+    }
+
+    return {
+        props: {
+            product: {
+                ...product,
+                createdAt: product.createdAt.toISOString(),
+                updatedAt: product.updatedAt.toISOString(),
+            },
+        },
+        revalidate: 60, // Revalidate every minute
+    };
+}
+
+export default ProductPage;

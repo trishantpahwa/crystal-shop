@@ -1,16 +1,50 @@
 import Head from "next/head";
 import { Container } from "@/components/Container";
 import { Button } from "@/components/Button";
-import { useOrders } from "@/providers/OrderProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import Image from "next/image";
 import { signInWithGoogle } from "@/services/login.service";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { GetServerSideProps } from "next";
+import prisma from "@/config/prisma.config";
+import authorize from "@/config/auth.config";
 
-export default function Orders() {
-    const { orders, loading } = useOrders();
+type Order = {
+    id: number;
+    userId: number;
+    total: string;
+    status: string;
+    shippingAddress: string;
+    createdAt: string;
+    updatedAt: string;
+    user: {
+        id: number;
+        name: string | null;
+        email: string;
+        phoneNumber: string | null;
+    };
+    items: Array<{
+        id: number;
+        productId: number;
+        quantity: number;
+        price: string;
+        product: {
+            id: number;
+            name: string;
+            subtitle: string;
+            imageSrc: string;
+            imageAlt: string;
+        };
+    }>;
+};
+
+export default function Orders({ initialOrders = [] }: { initialOrders: Order[] }) {
     const { isAuthenticated } = useAuth();
     const [signingIn, setSigningIn] = useState(false);
+    const [orders, setOrders] = useState<Order[]>(initialOrders);
+    const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(initialOrders.length > 0 ? 2 : 1); // Start from page 2 if we have initial data
+    const [canLoadMore, setCanLoadMore] = useState(initialOrders.length === 3);
 
     const handleSignIn = async () => {
         setSigningIn(true);
@@ -22,6 +56,52 @@ export default function Orders() {
             setSigningIn(false);
         }
     };
+
+    const loadMoreOrders = useCallback(async () => {
+        if (loading || !canLoadMore) return;
+        setLoading(true);
+        try {
+            const response = await fetch(`/api/orders?page=${page + 1}&limit=3`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setOrders(prev => page === 1 ? data : [...prev, ...data]);
+                setPage(prev => prev + 1);
+                setCanLoadMore(data.length === 3);
+            }
+        } catch (error) {
+            console.error('Failed to load more orders:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [page, loading, canLoadMore]);
+
+    useEffect(() => {
+        if (isAuthenticated && orders.length === 0) {
+            loadMoreOrders();
+        }
+    }, [isAuthenticated, loadMoreOrders, orders.length]);
+
+    // Infinite scroll setup
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && canLoadMore && !loading) {
+                    loadMoreOrders();
+                }
+            },
+            { threshold: 1.0 }
+        );
+
+        const sentinel = document.getElementById('load-more-sentinel');
+        if (sentinel) observer.observe(sentinel);
+
+        return () => observer.disconnect();
+    }, [loadMoreOrders, canLoadMore, loading]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -77,7 +157,7 @@ export default function Orders() {
                     <div className="mx-auto max-w-4xl">
                         <h1 className="text-3xl font-bold text-primary-text mb-8">Your Orders</h1>
 
-                        {loading ? (
+                        {loading && orders.length === 0 ? (
                             <div className="text-center py-16">
                                 <p className="text-text-muted">Loading orders...</p>
                             </div>
@@ -166,6 +246,15 @@ export default function Orders() {
                                         </div>
                                     </div>
                                 ))}
+                                {canLoadMore && (
+                                    <div id="load-more-sentinel" className="text-center py-8">
+                                        {loading ? (
+                                            <p className="text-text-muted">Loading more orders...</p>
+                                        ) : (
+                                            <p className="text-text-muted">Scroll for more</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -174,3 +263,89 @@ export default function Orders() {
         </>
     );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    const { req } = context;
+    const token = req.cookies['token'];
+    console.log(token);
+
+    if (!token) {
+        // No token, render page normally (client-side auth will handle)
+        return {
+            props: {
+                initialOrders: [],
+            },
+        };
+    }
+
+    const userID = authorize(token);
+    if (!userID) {
+        // Invalid token, render page normally
+        return {
+            props: {
+                initialOrders: [],
+            },
+        };
+    }
+
+    try {
+        // Fetch initial orders for SSR
+        const orders = await prisma.order.findMany({
+            where: { userId: Number(userID) },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phoneNumber: true,
+                    },
+                },
+                items: {
+                    include: {
+                        product: {
+                            select: {
+                                id: true,
+                                name: true,
+                                subtitle: true,
+                                images: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 3, // Initial load
+        });
+
+        // Transform the data to match the Order type
+        const transformedOrders = orders.map(order => ({
+            ...order,
+            createdAt: order.createdAt.toISOString(),
+            updatedAt: order.updatedAt.toISOString(),
+            items: order.items.map(item => ({
+                ...item,
+                createdAt: item.createdAt.toISOString(),
+                updatedAt: item.updatedAt.toISOString(),
+                product: {
+                    ...item.product,
+                    imageSrc: Array.isArray(item.product.images) ? (item.product.images[0] as { src: string, alt: string })?.src || '' : '',
+                    imageAlt: Array.isArray(item.product.images) ? (item.product.images[0] as { src: string, alt: string })?.alt || '' : '',
+                },
+            })),
+        }));
+
+        return {
+            props: {
+                initialOrders: transformedOrders,
+            },
+        };
+    } catch (error) {
+        console.error('Error fetching orders for SSR:', error);
+        return {
+            props: {
+                initialOrders: [],
+            },
+        };
+    }
+};

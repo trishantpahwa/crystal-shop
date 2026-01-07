@@ -31,6 +31,13 @@ async function GET(
     userID: number
 ) {
     try {
+        const page = Math.max(1, Number(request.query.page) || 1);
+        const limit = Math.min(
+            50,
+            Math.max(1, Number(request.query.limit) || 10)
+        );
+        const skip = (page - 1) * limit;
+
         const orders = await prisma.order.findMany({
             where: { userId: userID },
             include: {
@@ -41,6 +48,8 @@ async function GET(
                 },
             },
             orderBy: { createdAt: "desc" },
+            skip,
+            take: limit,
         });
 
         return response.status(200).json(orders);

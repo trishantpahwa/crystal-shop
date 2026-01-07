@@ -26,6 +26,7 @@ export default function AdminLogin() {
             if (response.ok) {
                 const { token } = await response.json();
                 localStorage.setItem("adminToken", token);
+                document.cookie = `admin-token=${token}; path=/; max-age=86400`; // 1 day
                 toast.success("Logged in successfully");
                 router.push("/admin/orders");
             } else {
@@ -80,4 +81,25 @@ export default function AdminLogin() {
             </div>
         </Container>
     );
+}
+
+export async function getServerSideProps(context: any) {
+    const { req } = context;
+    const token = req.cookies['admin-token'];
+
+    if (token) {
+        const { verifyAdminToken } = await import('@/config/admin-auth.config');
+        if (verifyAdminToken(token)) {
+            return {
+                redirect: {
+                    destination: '/admin/orders',
+                    permanent: false,
+                },
+            };
+        }
+    }
+
+    return {
+        props: {},
+    };
 }

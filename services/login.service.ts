@@ -16,6 +16,9 @@ const signInWithGoogle = async () => {
             const data = await response.json();
             localStorage.setItem("token", data.token);
             localStorage.setItem("refreshToken", data.refreshToken);
+            // Also set cookies for SSR support
+            document.cookie = `token=${data.token}; path=/; max-age=86400; samesite=strict`;
+            document.cookie = `refreshToken=${data.refreshToken}; path=/; max-age=604800; samesite=strict`;
             return true;
         } else {
             return false;

@@ -68,14 +68,14 @@ function getStatusColor(status: OrderStatus) {
     }
 }
 
-export default function AdminOrdersPage() {
+export default function AdminOrdersPage({ initialOrders }: { initialOrders: Order[] }) {
     const router = useRouter();
 
     const [status, setStatus] = useState<OrderStatus | "all">("all");
     const skip = 0;
     const take = 50;
 
-    const [orders, setOrders] = useState<Order[]>([]);
+    const [orders, setOrders] = useState<Order[]>(initialOrders);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
@@ -390,4 +390,76 @@ export default function AdminOrdersPage() {
             </div>
         </>
     );
+}
+
+export async function getServerSideProps(context: any) {
+    const { req } = context;
+    const token = req.cookies['admin-token'];
+
+    if (!token) {
+        return {
+            redirect: {
+                destination: '/admin/login',
+                permanent: false,
+            },
+        };
+    }
+
+    const { verifyAdminToken } = await import('@/config/admin-auth.config');
+    if (!verifyAdminToken(token)) {
+        return {
+            redirect: {
+                destination: '/admin/login',
+                permanent: false,
+            },
+        };
+    }
+    // Fetch initial orders
+    const prisma = (await import('@/config/prisma.config')).default;
+    const orders = await prisma.order.findMany({
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    phoneNumber: true,
+                },
+            },
+            items: {
+                include: {
+                    product: {
+                        select: {
+                            id: true,
+                            name: true,
+                            subtitle: true,
+                            images: true,
+                        },
+                    },
+                },
+            },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20, // Initial load
+    });
+
+    return {
+        props: {
+            initialOrders: orders.map(order => ({
+                ...order,
+                createdAt: order.createdAt.toISOString(),
+                updatedAt: order.updatedAt.toISOString(),
+                items: order.items.map(item => ({
+                    ...item,
+                    createdAt: item.createdAt.toISOString(),
+                    updatedAt: item.updatedAt.toISOString(),
+                    product: {
+                        ...item.product,
+                        imageSrc: Array.isArray(item.product.images) ? (item.product.images[0] as any)?.src || '' : '',
+                        imageAlt: Array.isArray(item.product.images) ? (item.product.images[0] as any)?.alt || '' : '',
+                    },
+                })),
+            })),
+        },
+    };
 }

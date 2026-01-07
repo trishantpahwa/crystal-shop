@@ -10,6 +10,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type { Product } from "@/generated/prisma/client";
+import prisma from "@/config/prisma.config";
 
 const categories = [
     { value: "rings", label: "Rings" },
@@ -18,74 +19,61 @@ const categories = [
     { value: "bracelets", label: "Bracelets" },
 ];
 
-function ProductCardSkeleton() {
-    return (
-        <div className="group relative overflow-hidden rounded-3xl bg-secondary-bg ring-1 ring-border">
-            <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
-                <div className="absolute -left-16 -top-16 h-40 w-40 rounded-full bg-[color-mix(in srgb, rgba(52, 211, 153, 0.4) 25%, transparent)] blur-2xl" />
-                <div className="absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-[color-mix(in srgb, rgba(236, 72, 153, 0.4) 25%, transparent)] blur-2xl" />
-            </div>
-            <div className="block">
-                <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                            <div className="h-5 bg-gray-300 rounded animate-pulse mb-2"></div>
-                            <div className="h-4 bg-gray-300 rounded animate-pulse w-3/4"></div>
-                        </div>
-                    </div>
-                    <div className="mt-5 grid grid-cols-[1fr_auto] items-end gap-4">
-                        <div>
-                            <div className="h-4 bg-gray-300 rounded animate-pulse w-12 mb-1"></div>
-                            <div className="h-6 bg-gray-300 rounded animate-pulse w-16"></div>
-                        </div>
-                    </div>
-                    <div className="mt-6">
-                        <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
-                            <div className="relative aspect-[4/3] w-full bg-gray-300 animate-pulse"></div>
-                        </div>
-                    </div>
-                </div>
-                <div className="p-5 pt-0">
-                    <div className="w-full h-9 bg-gray-300 rounded-full animate-pulse"></div>
-                </div>
-            </div>
-        </div>
-    );
+export async function getServerSideProps(context: any) {
+    const { category, page = "1" } = context.query;
+
+    const where: Record<string, unknown> = {};
+    const pageNum = Math.max(1, Number.parseInt(page as string, 10) || 1);
+    const take = 24;
+    const skip = (pageNum - 1) * take;
+
+    if (typeof category === "string" && category.trim()) {
+        const validCategory = category.trim().toUpperCase();
+        const validCategories = ["RINGS", "NECKLACES", "EARRINGS", "BRACELETS"];
+        if (validCategories.includes(validCategory)) {
+            where.category = validCategory;
+        }
+    }
+
+    const [products, totalCount] = await Promise.all([
+        prisma.product.findMany({
+            where,
+            orderBy: { createdAt: "desc" },
+            skip,
+            take,
+        }),
+        prisma.product.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / take);
+
+    return {
+        props: {
+            products: products.map(p => ({
+                ...p,
+                createdAt: p.createdAt.toISOString(),
+                updatedAt: p.updatedAt.toISOString(),
+            })),
+            pagination: {
+                currentPage: pageNum,
+                totalPages,
+                totalCount,
+            },
+        },
+    };
 }
 
-export default function ProductsPage() {
+export default function ProductsPage({ products, pagination }: { products: Product[], pagination: { currentPage: number, totalPages: number, totalCount: number } }) {
     const router = useRouter();
     const { isAuthenticated } = useAuth();
     const { items } = useCart();
 
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
     const selectedCategory = (router.query.category as string) || "";
 
-    const fetchProducts = async (category?: string) => {
-        try {
-            setLoading(true);
-            const url = category
-                ? `/api/products?category=${encodeURIComponent(category)}`
-                : "/api/products";
-            const response = await fetch(url);
-            const data = await response.json();
-            if (response.ok) setProducts(data.products);
-        } catch (error) {
-            console.error("Failed to fetch products:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleCategoryChange = (category: string) => {
-        const query = category ? { category } : {};
+        const query = category ? { category, page: "1" } : { page: "1" };
         router.push({ pathname: "/products", query }, undefined, { shallow: true });
     };
-
-    useEffect(() => {
-        fetchProducts(selectedCategory);
-    }, [selectedCategory]);
 
     return (
         <>
@@ -178,15 +166,41 @@ export default function ProductsPage() {
                                 ))}
                             </div>
 
-                            {loading ? (
-                                <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                                    {Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />)}
-                                </div>
-                            ) : (
-                                <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                                    {products.map((p: Product) => (
-                                        <ProductCard key={p.id} product={p} />
-                                    ))}
+                            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                                {products.map((p: Product) => (
+                                    <ProductCard key={p.id} product={p} />
+                                ))}
+                            </div>
+
+                            {pagination.totalPages > 1 && (
+                                <div className="mt-12 flex items-center justify-center gap-2">
+                                    <button
+                                        onClick={() => {
+                                            const newPage = Math.max(1, pagination.currentPage - 1);
+                                            const query = { ...router.query, page: newPage.toString() };
+                                            router.push({ pathname: "/products", query });
+                                        }}
+                                        disabled={pagination.currentPage === 1}
+                                        className="rounded-lg bg-secondary-bg px-3 py-2 text-sm font-medium text-text-muted ring-1 ring-border transition hover:bg-accent-bg hover:text-primary-text disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Previous
+                                    </button>
+
+                                    <span className="text-sm text-text-muted">
+                                        Page {pagination.currentPage} of {pagination.totalPages}
+                                    </span>
+
+                                    <button
+                                        onClick={() => {
+                                            const newPage = Math.min(pagination.totalPages, pagination.currentPage + 1);
+                                            const query = { ...router.query, page: newPage.toString() };
+                                            router.push({ pathname: "/products", query });
+                                        }}
+                                        disabled={pagination.currentPage === pagination.totalPages}
+                                        className="rounded-lg bg-secondary-bg px-3 py-2 text-sm font-medium text-text-muted ring-1 ring-border transition hover:bg-accent-bg hover:text-primary-text disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Next
+                                    </button>
                                 </div>
                             )}
                         </Container>
