@@ -53,11 +53,32 @@ export async function getStaticProps() {
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
     take: 8,
+    include: {
+      reviews: {
+        select: {
+          rating: true
+        }
+      }
+    }
+  });
+
+  // Calculate average ratings for each product
+  const productsWithRatings = products.map(product => {
+    const totalReviews = product.reviews.length;
+    const averageRating = totalReviews > 0
+      ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+      : 0;
+
+    return {
+      ...product,
+      averageRating: Math.round(averageRating * 10) / 10,
+      totalReviews
+    };
   });
 
   return {
     props: {
-      products: products.map(p => ({
+      products: productsWithRatings.map(p => ({
         ...p,
         createdAt: p.createdAt.toISOString(),
         updatedAt: p.updatedAt.toISOString(),
