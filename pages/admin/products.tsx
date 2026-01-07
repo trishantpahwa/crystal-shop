@@ -2,6 +2,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/router";
+import { GetServerSidePropsContext } from "next";
 import toast from "react-hot-toast";
 import { upload as vercelUpload } from "@vercel/blob/client";
 
@@ -291,7 +292,7 @@ export default function AdminProductPage({ initialProducts }: { initialProducts:
             const pathname = `products/${Date.now()}`;
             const result = await vercelUpload(pathname, file, { handleUploadUrl: "/api/blob/upload", access: 'public' });
             return typeof result === "string" ? result : (result as { url?: string })?.url ?? "";
-        } catch (_e) {
+        } catch {
             toast.error("Image upload failed");
             return "";
         }
@@ -702,7 +703,7 @@ export default function AdminProductPage({ initialProducts }: { initialProducts:
     );
 }
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
     const { req } = context;
     const token = req.cookies['admin-token']; // Assuming token is stored in cookie
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { GetServerSidePropsContext } from "next";
 import toast from "react-hot-toast";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
@@ -83,7 +84,7 @@ export default function AdminLogin() {
     );
 }
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
     const { req } = context;
     const token = req.cookies['admin-token'];
 

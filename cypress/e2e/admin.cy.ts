@@ -37,7 +37,7 @@ describe("Admin Functionality", () => {
 
         orderElement.invoke("val").then((val) => {
             // Remove the orderElementValue from the array
-            var orderStatusValues = [
+            const orderStatusValues = [
                 "PENDING",
                 "SHIPPED",
                 "DELIVERED",

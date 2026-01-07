@@ -10,8 +10,6 @@ import { ProductCard } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { useCart } from "@/providers/CartProvider";
-import { useAuth } from "@/providers/AuthProvider";
 import type { Product } from "@/generated/prisma/client";
 import prisma from "@/config/prisma.config";
 import Footer from "@/components/Footer";

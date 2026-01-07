@@ -52,14 +52,12 @@ Cypress.Commands.add("adminLogout", () => {
     });
 });
 
-declare global {
-    namespace Cypress {
-        interface Chainable {
-            login(): Chainable<void>;
-            logout(): Chainable<void>;
-            adminLogin(username?: string, password?: string): Chainable<void>;
-            adminLogout(): Chainable<void>;
-        }
+declare module "cypress" {
+    interface Chainable {
+        login(): Chainable<void>;
+        logout(): Chainable<void>;
+        adminLogin(username?: string, password?: string): Chainable<void>;
+        adminLogout(): Chainable<void>;
     }
 }
 

@@ -1,7 +1,8 @@
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { GetStaticPropsContext } from "next";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
@@ -36,9 +37,9 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
         if (isAuthenticated && product) {
             checkPurchaseStatus();
         }
-    }, [isAuthenticated, product]);
+    }, [isAuthenticated, product, checkPurchaseStatus]);
 
-    const checkPurchaseStatus = async () => {
+    const checkPurchaseStatus = useCallback(async () => {
         if (!product) return;
 
         setCheckingPurchase(true);
@@ -58,7 +59,7 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
         } finally {
             setCheckingPurchase(false);
         }
-    };
+    }, [product]);
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -373,7 +374,7 @@ export async function getStaticPaths() {
     };
 }
 
-export async function getStaticProps(context: any) {
+export async function getStaticProps(context: GetStaticPropsContext) {
     const { slug } = context.params;
     const productId = Number(slug);
 
@@ -410,7 +411,8 @@ export async function getStaticProps(context: any) {
         : 0;
 
     // Exclude reviews from product to avoid serializing Date objects
-    const { reviews, ...productWithoutReviews } = product;
+    const productWithoutReviews = { ...product };
+    delete productWithoutReviews.reviews;
 
     return {
         props: {

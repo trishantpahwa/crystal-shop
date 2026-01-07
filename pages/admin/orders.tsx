@@ -4,6 +4,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import { GetServerSidePropsContext } from "next";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/Button";
@@ -361,10 +362,11 @@ export default function AdminOrdersPage({ initialOrders }: { initialOrders: Orde
                                                     className="flex items-center gap-3 p-3 bg-primary-bg rounded-lg"
                                                 >
                                                     <div className="relative w-12 h-12 flex-shrink-0">
-                                                        <img
+                                                        <Image
                                                             src={item.product.imageSrc}
                                                             alt={item.product.imageAlt}
-                                                            className="w-full h-full object-cover rounded"
+                                                            fill
+                                                            className="object-cover rounded"
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -392,7 +394,7 @@ export default function AdminOrdersPage({ initialOrders }: { initialOrders: Orde
     );
 }
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
     const { req } = context;
     const token = req.cookies['admin-token'];
 
@@ -455,8 +457,8 @@ export async function getServerSideProps(context: any) {
                     updatedAt: item.updatedAt.toISOString(),
                     product: {
                         ...item.product,
-                        imageSrc: Array.isArray(item.product.images) ? (item.product.images[0] as any)?.src || '' : '',
-                        imageAlt: Array.isArray(item.product.images) ? (item.product.images[0] as any)?.alt || '' : '',
+                        imageSrc: Array.isArray(item.product.images) ? (item.product.images[0] as { src: string })?.src || '' : '',
+                        imageAlt: Array.isArray(item.product.images) ? (item.product.images[0] as { alt: string })?.alt || '' : '',
                     },
                 })),
             })),

@@ -86,6 +86,7 @@ export default function SearchFilters({ onFiltersChange, initialFilters = {} }: 
 
     // Update searchQuery when initialFilters.q changes
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSearchQuery(initialFilters.q || "");
     }, [initialFilters.q]);
 
