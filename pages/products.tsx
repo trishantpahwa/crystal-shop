@@ -5,8 +5,6 @@ import { Container } from "@/components/Container";
 import { ArrowLeftIcon } from "@/components/Icons";
 import { ProductCard } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
-import { useCart } from "@/providers/CartProvider";
-import { useAuth } from "@/providers/AuthProvider";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type { Product } from "@/generated/prisma/client";
@@ -19,7 +17,9 @@ export default function ProductsPage() {
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalCount: 0 }); // Might need a fix => @trishantpahwa | 2026-01-08 01:14:46
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
     const [filters, setFilters] = useState({
         q: router.query.q as string || "",
         category: router.query.category as string || "",
@@ -28,26 +28,44 @@ export default function ProductsPage() {
         minRating: router.query.minRating as string || "",
         sortBy: router.query.sortBy as string || "createdAt",
         order: router.query.order as string || "desc",
-        page: router.query.page as string || "1",
+        page: "1",
+        take: "24",
     });
 
-    const fetchProducts = useCallback(async (currentFilters: typeof filters) => {
-        setLoading(true);
+    const fetchProducts = useCallback(async (currentFilters: typeof filters, append: boolean = false, page: number = 1) => {
+        if (append) {
+            setLoadingMore(true);
+        } else {
+            setLoading(true);
+            setCurrentPage(1);
+            setHasMore(true);
+        }
+
         try {
             const query = new URLSearchParams();
             Object.entries(currentFilters).forEach(([key, value]) => {
                 if (value) query.set(key, value);
             });
 
+            if (append) {
+                query.set('skip', ((page - 1) * 24).toString());
+            }
+
             const response = await fetch(`/api/products?${query.toString()}`);
             const data = await response.json();
-            setProducts(data.products);
-            // For simplicity, assume all products fit in one page for now
-            setPagination({ currentPage: 1, totalPages: 1, totalCount: data.products.length });
+
+            if (append) {
+                setProducts(prev => [...prev, ...data.products]);
+                setHasMore(data.products.length === 24); // Check if there are more products to load
+            } else {
+                setProducts(data.products);
+                setHasMore(data.products.length === 24);
+            }
         } catch (error) {
             console.error("Failed to fetch products:", error);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     }, []);
 
@@ -55,9 +73,32 @@ export default function ProductsPage() {
         fetchProducts(filters);
     }, [filters, fetchProducts]);
 
+    // Infinite scroll handler
+    useEffect(() => {
+        const handleScroll = () => {
+            if (loadingMore || !hasMore) return;
+
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+
+            // Load more when user is within 200px of bottom
+            if (scrollTop + windowHeight >= documentHeight - 400) {
+                const nextPage = currentPage + 1;
+                setCurrentPage(nextPage);
+                fetchProducts(filters, true, nextPage);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loadingMore, hasMore, currentPage, filters, fetchProducts]);
+
     const handleFiltersChange = (newFilters: Partial<typeof filters>) => {
         const updated = { ...filters, ...newFilters, page: "1" };
         setFilters(updated);
+        setCurrentPage(1);
+        setProducts([]); // Clear current products when filters change
         // Update URL
         const query = { ...router.query };
         Object.keys(newFilters).forEach(key => {
@@ -106,37 +147,56 @@ export default function ProductsPage() {
                                 />
                             </div>
 
-                            <div className="mt-2">
+                            {/* Desktop: Sidebar layout, Mobile: Stacked layout */}
+                            <div className="flex gap-8">
+                                {/* Sidebar - Always render but conditionally show */}
                                 <SearchFilters
                                     onFiltersChange={handleFiltersChange}
                                     initialFilters={filters}
                                 />
-                            </div>
 
-                            {loading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <div className="text-text-muted">Loading products...</div>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                                        {products.map((p: Product) => (
-                                            <ProductCard key={p.id} product={p} />
-                                        ))}
-                                    </div>
-
-                                    {products.length === 0 && (
+                                {/* Main Content */}
+                                <div className="flex-1 min-w-0">
+                                    {loading ? (
                                         <div className="flex items-center justify-center py-12">
-                                            <div className="text-center">
-                                                <p className="text-text-muted mb-4">No products found matching your criteria.</p>
-                                                <Button variant="outline" onClick={() => handleFiltersChange({})}>
-                                                    Clear Filters
-                                                </Button>
-                                            </div>
+                                            <div className="text-text-muted">Loading products...</div>
                                         </div>
+                                    ) : (
+                                        <>
+                                            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                                {products.map((p: Product) => (
+                                                    <ProductCard key={p.id} product={p} />
+                                                ))}
+                                            </div>
+
+                                            {/* Loading more indicator */}
+                                            {loadingMore && (
+                                                <div className="flex items-center justify-center py-8">
+                                                    <div className="text-text-muted">Loading more products...</div>
+                                                </div>
+                                            )}
+
+                                            {/* No more products indicator */}
+                                            {!loadingMore && !hasMore && products.length > 0 && (
+                                                <div className="flex items-center justify-center py-8">
+                                                    <div className="text-text-muted text-sm">No more products to load</div>
+                                                </div>
+                                            )}
+
+                                            {products.length === 0 && (
+                                                <div className="flex items-center justify-center py-12">
+                                                    <div className="text-center">
+                                                        <p className="text-text-muted mb-4">No products found matching your criteria.</p>
+                                                        <Button variant="outline" onClick={() => handleFiltersChange({})}>
+                                                            Clear Filters
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
-                                </>
-                            )}
+                                </div>
+                            </div>
                         </Container>
                     </section>
                     <Footer />
