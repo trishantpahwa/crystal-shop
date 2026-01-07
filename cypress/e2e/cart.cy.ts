@@ -5,6 +5,18 @@ describe("Cart Functionality", () => {
 
     it("should show empty cart when no items", () => {
         cy.visit("/cart");
+        cy.wait(2000); // Wait for cart to load
+        cy.contains("Your Cart").should("be.visible");
+
+        // If cart is not empty, clear it first
+        cy.get("body").then((body) => {
+            if (body.find(".text-text-disabled").length > 0) {
+                cy.get(".text-text-disabled").each(() => {
+                    cy.contains("Remove").click();
+                });
+            }
+        });
+
         cy.contains("Your cart is empty").should("be.visible");
         cy.contains("Continue Shopping").should("be.visible");
     });
@@ -70,6 +82,7 @@ describe("Cart Functionality", () => {
             .first()
             .within(() => {
                 cy.contains("Add to bag").click();
+                cy.wait(500);
             });
 
         cy.visit("/cart");
@@ -86,6 +99,7 @@ describe("Cart Functionality", () => {
             .first()
             .within(() => {
                 cy.contains("Add to bag").click();
+                cy.wait(500);
             });
 
         cy.visit("/cart");
@@ -104,6 +118,7 @@ describe("Cart Functionality", () => {
             .first()
             .within(() => {
                 cy.contains("Add to bag").click();
+                cy.wait(500);
             });
 
         cy.visit("/cart");
@@ -129,6 +144,7 @@ describe("Cart Functionality", () => {
             .first()
             .within(() => {
                 cy.contains("Add to bag").click();
+                cy.wait(500);
             });
 
         cy.visit("/cart");

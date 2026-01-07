@@ -15,12 +15,34 @@ import { useRouter } from "next/router";
 export default function Cart() {
     const { items, total, loading, updateQuantity, removeFromCart, refreshCart } = useCart();
     const { createOrder } = useOrders();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading: authLoading } = useAuth();
     const [signingIn, setSigningIn] = useState(false);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [showCheckout, setShowCheckout] = useState(false);
     const [shippingAddress, setShippingAddress] = useState("");
     const router = useRouter();
+
+    // Show loading while authentication is being determined
+    if (authLoading) {
+        return (
+            <>
+                <Head>
+                    <title>Cart — Crystal Atelier</title>
+                </Head>
+                <div className="min-h-screen bg-primary-bg text-primary-text">
+                    <Container className="py-16">
+                        <div className="mx-auto max-w-md text-center">
+                            <div className="animate-pulse">
+                                <div className="h-8 bg-secondary-bg rounded mb-4"></div>
+                                <div className="h-4 bg-secondary-bg rounded mb-2"></div>
+                                <div className="h-10 bg-secondary-bg rounded"></div>
+                            </div>
+                        </div>
+                    </Container>
+                </div>
+            </>
+        );
+    }
 
     const handleSignIn = async () => {
         setSigningIn(true);
