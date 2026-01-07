@@ -72,7 +72,32 @@ async function GET(request: NextApiRequest, response: NextApiResponse) {
             100,
             Math.max(1, Number.parseInt(String(take), 10) || 24)
         ),
+        include: {
+            reviews: {
+                select: {
+                    rating: true,
+                },
+            },
+        },
     });
 
-    return response.status(200).json({ products });
+    // Calculate average ratings for each product
+    const productsWithRatings = products.map((product) => {
+        const totalReviews = product.reviews.length;
+        const averageRating =
+            totalReviews > 0
+                ? product.reviews.reduce(
+                      (sum, review) => sum + review.rating,
+                      0
+                  ) / totalReviews
+                : 0;
+
+        return {
+            ...product,
+            averageRating: Math.round(averageRating * 10) / 10,
+            totalReviews,
+        };
+    });
+
+    return response.status(200).json({ products: productsWithRatings });
 }

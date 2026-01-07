@@ -18,7 +18,7 @@ function CardChrome({ children }: { children: ReactNode }) {
     );
 }
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, averageRating, totalReviews }: { product: Product; averageRating?: number; totalReviews?: number }) {
     const { addToCart, loading } = useCart();
 
     const handleAddToCart = async () => {
@@ -44,6 +44,24 @@ export function ProductCard({ product }: { product: Product }) {
                         <div>
                             <p className="text-sm text-text-disabled">From</p>
                             <p className="text-xl font-semibold text-primary-text">₹ {product.price}</p>
+                            {averageRating && averageRating > 0 && (
+                                <div className="mt-1 flex items-center gap-1">
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <span
+                                                key={star}
+                                                className={`text-xs ${star <= averageRating! ? "text-yellow-400" : "text-gray-300"
+                                                    }`}
+                                            >
+                                                ★
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <span className="text-xs text-text-disabled">
+                                        ({totalReviews})
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -51,8 +69,8 @@ export function ProductCard({ product }: { product: Product }) {
                         <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
                             <div className="relative aspect-[4/3] w-full">
                                 <Image
-                                    src={(product.images as {src: string, alt: string}[])?.[0]?.src || ""}
-                                    alt={(product.images as {src: string, alt: string}[])?.[0]?.alt || product.name}
+                                    src={(product.images as { src: string, alt: string }[])?.[0]?.src || ""}
+                                    alt={(product.images as { src: string, alt: string }[])?.[0]?.alt || product.name}
                                     fill
                                     sizes="(min-width: 1024px) 260px, (min-width: 640px) 45vw, 90vw"
                                     className="object-cover transition duration-500 group-hover:scale-105"
