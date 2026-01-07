@@ -95,7 +95,15 @@ export default function SearchFilters({ onFiltersChange, initialFilters = {} }: 
     };
 
     const clearFilters = () => {
-        const cleared = {};
+        const cleared = {
+            q: "",
+            category: "",
+            minPrice: "",
+            maxPrice: "",
+            minRating: "",
+            sortBy: "createdAt",
+            order: "desc",
+        };
         setFilters(cleared);
         setSearchQuery("");
         onFiltersChange(cleared);
