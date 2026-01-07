@@ -6,6 +6,7 @@ import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { ArrowLeftIcon, SparkleIcon } from "@/components/Icons";
+import { ShareButtons } from "@/components/ShareButtons";
 import { useCart } from "@/providers/CartProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import toast from "react-hot-toast";
@@ -21,6 +22,7 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
 
     const { addToCart, loading } = useCart();
     const { isAuthenticated } = useAuth();
+    const router = useRouter();
 
     const [selectedImage, setSelectedImage] = useState(0);
     const [showReviewForm, setShowReviewForm] = useState(false);
@@ -121,6 +123,15 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
             <Head>
                 <title>{product.name} — Crystal Atelier</title>
                 <meta name="description" content={product.subtitle} />
+                <meta property="og:title" content={`${product.name} — Crystal Atelier`} />
+                <meta property="og:description" content={product.subtitle} />
+                <meta property="og:image" content={((product as Product).images as { src: string; alt: string }[])?.[0]?.src} />
+                <meta property="og:url" content={`/product/${product.id}`} />
+                <meta property="og:type" content="product" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={`${product.name} — Crystal Atelier`} />
+                <meta name="twitter:description" content={product.subtitle} />
+                <meta name="twitter:image" content={((product as Product).images as { src: string; alt: string }[])?.[0]?.src} />
             </Head>
 
             <div className="min-h-screen bg-primary-bg text-primary-text">
@@ -182,6 +193,15 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
                                 <p className="mt-5 max-w-xl text-base leading-7 text-text-subtle">
                                     {product.subtitle}
                                 </p>
+
+                                <div className="mt-6">
+                                    <ShareButtons
+                                        url={`${typeof window !== 'undefined' ? window.location.origin : ''}${router.asPath}`}
+                                        title={`${product.name} - Crystal Atelier`}
+                                        description={product.subtitle}
+                                        image={((product as Product).images as { src: string; alt: string }[])?.[0]?.src}
+                                    />
+                                </div>
 
                                 <div className="mt-8 flex items-center gap-4">
                                     <div>
