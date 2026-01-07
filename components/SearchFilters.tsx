@@ -84,6 +84,11 @@ export default function SearchFilters({ onFiltersChange, initialFilters = {} }: 
         };
     }, []);
 
+    // Update searchQuery when initialFilters.q changes
+    useEffect(() => {
+        setSearchQuery(initialFilters.q || "");
+    }, [initialFilters.q]);
+
     const closeMobileSidebar = () => {
         setIsOpen(false);
     };
