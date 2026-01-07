@@ -3,19 +3,19 @@ import Link from "next/link";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
-import { Divider } from "@/components/Divider";
 import { FeatureItem } from "@/components/FeatureItem";
 import { ArrowRightIcon, SparkleIcon, StarIcon } from "@/components/Icons";
 import { GemIcon, LeafIcon, ShieldIcon, TruckIcon } from "@/components/MiniIcon";
 import { ProductCard } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/SectionTitle";
-import { useEffect, useState } from "react";
-import { signInWithGoogle } from "@/services/login.service";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { useCart } from "@/providers/CartProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import type { Product } from "@/generated/prisma/client";
 import prisma from "@/config/prisma.config";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 const categories = [
   { name: "Rings", desc: "Bold facets, perfect fit", slug: "rings" },
@@ -95,41 +95,8 @@ function scrollToSection(id: string) {
   }
 }
 
-function NavLink({ children }: { children: string }) {
-  return (
-    <a
-      href="#"
-      className="text-sm text-text-muted transition hover:text-primary-text"
-    >
-      {children}
-    </a>
-  );
-}
-
 export default function Home({ products }: { products: Product[] }) {
-  const { isAuthenticated, refresh, logout } = useAuth();
-  const { items } = useCart();
-
-  const [signedIn, setSignedIn] = useState(false);
   const [email, setEmail] = useState("");
-
-  const _signInWithGoogle = async () => {
-    const signedIn = await signInWithGoogle();
-    if (signedIn) toast.success("Signed in successfully!");
-    else toast.error("Sign in failed. Please try again.");
-    setSignedIn(signedIn);
-    if (signedIn) refresh();
-  };
-
-  const _logout = async () => {
-    const loggedOut = await logout();
-    if (loggedOut) {
-      toast.success("Logged out successfully!");
-      setSignedIn(false);
-    } else {
-      toast.error("Log out failed. Please try again.");
-    }
-  };
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,10 +105,6 @@ export default function Home({ products }: { products: Product[] }) {
     toast.success("Subscribed successfully!");
     setEmail("");
   };
-
-  useEffect(() => {
-    setSignedIn(isAuthenticated);
-  }, [isAuthenticated]);
 
   return (
     <>
@@ -158,51 +121,7 @@ export default function Home({ products }: { products: Product[] }) {
           <div className="mx-auto h-[520px] max-w-6xl bg-gradient-to-b from-[var(--color-gradient-start)] via-[var(--color-gradient-middle)] to-[var(--color-gradient-end)] blur-2xl" />
         </div>
 
-        <header className="sticky top-0 z-40 border-b border-border bg-primary-bg/70 backdrop-blur">
-          <Container>
-            <div className="flex h-16 items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-secondary-bg ring-1 ring-border">
-                  <GemIcon className="h-5 w-5 text-emerald-accent" />
-                </div>
-                <div className="leading-tight">
-                  <p className="text-sm font-semibold tracking-tight">Crystal Atelier</p>
-                  <p className="text-xs text-text-dim">Modern crystal jewellery</p>
-                </div>
-              </div>
-
-              <nav className="hidden items-center gap-7 md:flex">
-                <NavLink>New</NavLink>
-                <NavLink>Best sellers</NavLink>
-                <NavLink>Gifts</NavLink>
-                <NavLink>About</NavLink>
-              </nav>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="hidden rounded-full bg-secondary-bg px-4 py-2 text-sm text-text-light ring-1 ring-border transition hover:bg-accent-bg sm:inline-flex"
-                >
-                  Search
-                </button>
-                {signedIn ? (
-                  <div className="flex items-center gap-2">
-                    <Button variant="secondary" type="button" href="/cart">
-                      Bag ({items.length})
-                    </Button>
-                    <Button variant="outline" type="button" onClick={_logout}>
-                      Log Out
-                    </Button>
-                  </div>
-                ) : (
-                  <Button variant="secondary" type="button" onClick={_signInWithGoogle}>
-                    Sign In
-                  </Button>
-                )}
-              </div>
-            </div>
-          </Container>
-        </header>
+        <Header />
 
         <main>
           <section className="pt-12 sm:pt-16">
@@ -515,89 +434,7 @@ export default function Home({ products }: { products: Product[] }) {
           </section>
         </main>
 
-        <footer className="border-t border-border">
-          <Container>
-            <div className="py-10">
-              <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-2xl bg-secondary-bg ring-1 ring-border">
-                      <GemIcon className="h-5 w-5 text-emerald-accent" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">Crystal Atelier</p>
-                      <p className="text-xs text-text-dim">Modern crystal jewellery</p>
-                    </div>
-                  </div>
-                  <p className="mt-4 max-w-sm text-sm leading-6 text-text-subtle">
-                    Sleek silhouettes, luminous crystals, and calm luxury.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-disabled">
-                      Shop
-                    </p>
-                    <div className="space-y-2">
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Rings
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Necklaces
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Earrings
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-disabled">
-                      Company
-                    </p>
-                    <div className="space-y-2">
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        About
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Sustainability
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Careers
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-disabled">
-                      Support
-                    </p>
-                    <div className="space-y-2">
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Shipping
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Returns
-                      </a>
-                      <a className="block text-sm text-text-muted hover:text-primary-text" href="#">
-                        Contact
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-10">
-                <Divider />
-                <div className="mt-6 flex flex-col gap-3 text-xs text-text-faint sm:flex-row sm:items-center sm:justify-between">
-                  <p>© {new Date().getFullYear()} Crystal Atelier. All rights reserved.</p>
-                  <p className="text-text-very-faint">Crafted with Tailwind + React</p>
-                </div>
-              </div>
-            </div>
-          </Container>
-        </footer>
+        <Footer />
       </div>
     </>
   );

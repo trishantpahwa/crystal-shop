@@ -11,6 +11,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import type { Product } from "@/generated/prisma/client";
 import prisma from "@/config/prisma.config";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 const categories = [
     { value: "rings", label: "Rings" },
@@ -111,40 +113,10 @@ export default function ProductsPage({ products, pagination }: { products: Produ
                     <div className="mx-auto h-[520px] max-w-6xl bg-gradient-to-b from-[var(--color-gradient-start)] via-[var(--color-gradient-middle)] to-[var(--color-gradient-end)] blur-2xl" />
                 </div>
 
-                <header className="sticky top-0 z-40 border-b border-border bg-primary-bg/70 backdrop-blur">
-                    <Container>
-                        <div className="flex h-16 items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <Link href="/" className="flex items-center gap-3">
-                                    <div className="grid h-10 w-10 place-items-center rounded-2xl bg-secondary-bg ring-1 ring-border">
-                                        <SparkleIcon className="h-5 w-5 text-emerald-accent" />
-                                    </div>
-                                    <div className="leading-tight">
-                                        <p className="text-sm font-semibold tracking-tight">Crystal Atelier</p>
-                                        <p className="text-xs text-text-dim">Modern crystal jewellery</p>
-                                    </div>
-                                </Link>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    className="hidden rounded-full bg-secondary-bg px-4 py-2 text-sm text-text-light ring-1 ring-border transition hover:bg-accent-bg sm:inline-flex"
-                                >
-                                    Search
-                                </button>
-                                {isAuthenticated ? <Button variant="secondary" type="button" href="/cart">
-                                    Bag ({items.length})
-                                </Button> : <Button variant="secondary" type="button">
-                                    Sign In
-                                </Button>}
-                            </div>
-                        </div>
-                    </Container>
-                </header>
+                <Header />
 
                 <main>
-                    <section className="pt-12 sm:pt-16">
+                    <section className="pt-12 sm:pt-16 mb-16">
                         <Container>
                             <div className="mb-8">
                                 <Link href="/" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-primary-text">
@@ -226,6 +198,7 @@ export default function ProductsPage({ products, pagination }: { products: Produ
                             )}
                         </Container>
                     </section>
+                    <Footer />
                 </main>
             </div>
         </>

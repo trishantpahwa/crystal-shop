@@ -8,6 +8,8 @@ import { useState, useEffect, useCallback } from "react";
 import { GetServerSideProps } from "next";
 import prisma from "@/config/prisma.config";
 import authorize from "@/config/auth.config";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 type Order = {
     id: number;
@@ -153,8 +155,9 @@ export default function Orders({ initialOrders = [] }: { initialOrders: Order[] 
                 <title>Orders — Crystal Atelier</title>
             </Head>
             <div className="min-h-screen bg-primary-bg text-primary-text">
+                <Header />
                 <Container className="py-16">
-                    <div className="mx-auto max-w-4xl">
+                    <div className="mx-auto max-w-4xl mb-16">
                         <h1 className="text-3xl font-bold text-primary-text mb-8">Your Orders</h1>
 
                         {loading && orders.length === 0 ? (
@@ -258,6 +261,7 @@ export default function Orders({ initialOrders = [] }: { initialOrders: Order[] 
                             </div>
                         )}
                     </div>
+                    <Footer />
                 </Container>
             </div>
         </>
