@@ -12,9 +12,10 @@ Cypress.Commands.add("login", () => {
     }).then((response) => {
         expect(response.status).to.eq(200);
         const jwt = response.body.token;
+        const refreshToken = response.body.refreshToken;
         cy.window().then((win) => {
             win.localStorage.setItem("token", jwt);
-            win.localStorage.setItem("refreshToken", jwt);
+            win.localStorage.setItem("refreshToken", refreshToken);
         });
     });
 });
