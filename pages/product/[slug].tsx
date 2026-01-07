@@ -13,7 +13,9 @@ import type { Product, Review } from "@/generated/prisma/client";
 import Link from "next/link";
 import prisma from "@/config/prisma.config";
 
-function ProductPage({ product, averageRating, totalReviews, reviews }: { product: Product | null; averageRating: number; totalReviews: number; reviews: Review[] }) {
+type ReviewWithUser = Review & { user: { name: string | null } };
+
+function ProductPage({ product, averageRating, totalReviews, reviews }: { product: Product | null; averageRating: number; totalReviews: number; reviews: ReviewWithUser[] }) {
 
     const { addToCart, loading } = useCart();
     const { isAuthenticated } = useAuth();
@@ -315,7 +317,7 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
                             {/* Reviews List */}
                             <div className="mt-8 space-y-6">
                                 {reviews && reviews.length > 0 ? (
-                                    reviews.map((review: Review) => (
+                                    reviews.map((review: ReviewWithUser) => (
                                         <div key={review.id} className="rounded-2xl bg-secondary-bg p-6 ring-1 ring-border">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
