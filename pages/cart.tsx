@@ -269,13 +269,13 @@ export default function Cart() {
                                         {/* Discount Code Section */}
                                         <div className="mb-4">
                                             {!discountCode ? (
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-4">
                                                     <input
                                                         type="text"
                                                         placeholder="Discount code"
                                                         value={discountCodeInput}
                                                         onChange={(e) => setDiscountCodeInput(e.target.value)}
-                                                        className="flex-1 px-3 py-2 bg-primary-bg border border-border rounded-lg text-primary-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent-bg text-sm"
+                                                        className="w-full px-3 py-2 bg-primary-bg border border-border rounded-lg text-primary-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent-bg text-sm"
                                                         disabled={loading || applyingDiscount}
                                                     />
                                                     <Button
