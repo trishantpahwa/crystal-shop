@@ -91,8 +91,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                         ...item,
                         product: {
                             ...item.product,
-                            imageSrc: (item.product.images as {src: string, alt: string}[])?.[0]?.src || "",
-                            imageAlt: (item.product.images as {src: string, alt: string}[])?.[0]?.alt || item.product.name,
+                            imageSrc: (item.product.images as { src: string, alt: string }[])?.[0]?.src || "",
+                            imageAlt: (item.product.images as { src: string, alt: string }[])?.[0]?.alt || item.product.name,
                         },
                     })),
                 }));
