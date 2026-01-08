@@ -28,6 +28,11 @@ export async function refreshAuthToken(): Promise<boolean> {
         const data = await response.json();
         window.localStorage.setItem("token", data.token);
         window.localStorage.setItem("refreshToken", data.refreshToken);
+        // Also set cookies for SSR support
+        document.cookie = `token=${data.token}; path=/; max-age=86400; samesite=strict`;
+        document.cookie = `refreshToken=${data.refreshToken}; path=/; max-age=604800; samesite=strict`;
+        // Dispatch event to update AuthProvider state
+        window.dispatchEvent(new CustomEvent("auth-tokens-updated"));
         return true;
     } catch {
         return false;
@@ -37,5 +42,9 @@ export async function refreshAuthToken(): Promise<boolean> {
 export function forceLogoutUser(): void {
     window.localStorage.removeItem("token");
     window.localStorage.removeItem("refreshToken");
+    // Clear cookies if present
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie =
+        "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     window.location.reload();
 }

@@ -54,8 +54,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         };
 
+        const onTokensUpdated = () => {
+            setTokens(readTokensFromLocalStorage());
+        };
+
         window.addEventListener("storage", onStorage);
-        return () => window.removeEventListener("storage", onStorage);
+        window.addEventListener("auth-tokens-updated", onTokensUpdated);
+        return () => {
+            window.removeEventListener("storage", onStorage);
+            window.removeEventListener("auth-tokens-updated", onTokensUpdated);
+        };
     }, []);
 
     const value = useMemo<AuthState>(() => {
