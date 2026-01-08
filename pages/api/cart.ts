@@ -20,8 +20,16 @@ export default async function handler(
             return PUT(request, response, Number(userID));
         case "DELETE":
             return DELETE(request, response, Number(userID));
+        case "PATCH":
+            return PATCH(request, response, Number(userID));
         default:
-            response.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
+            response.setHeader("Allow", [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "PATCH",
+            ]);
             return response
                 .status(405)
                 .end(`Method ${request.method} Not Allowed`);
@@ -46,16 +54,51 @@ async function GET(
         });
 
         if (!cart) {
-            return response.status(200).json({ items: [], total: 0 });
+            return response
+                .status(200)
+                .json({
+                    items: [],
+                    total: 0,
+                    discountCode: null,
+                    discountAmount: 0,
+                });
         }
 
-        const total = cart.items.reduce((sum, item) => {
+        const subtotal = cart.items.reduce((sum, item) => {
             const price = parseFloat(item.product.price.replace(/[₹,]/g, ""));
             return sum + price * item.quantity;
         }, 0);
 
+        let discountAmount = 0;
+        let discountCode = null;
+
+        if (cart.discountCode) {
+            const code = await prisma.discountCode.findUnique({
+                where: { code: cart.discountCode },
+            });
+
+            if (
+                code &&
+                code.isActive &&
+                (!code.expiresAt || new Date() <= code.expiresAt) &&
+                (!code.usageLimit || code.usedCount < code.usageLimit)
+            ) {
+                discountCode = code.code;
+                if (code.discountType === "PERCENTAGE") {
+                    discountAmount = (subtotal * code.discountValue) / 100;
+                } else {
+                    discountAmount = Math.min(code.discountValue, subtotal);
+                }
+            }
+        }
+
+        const total = subtotal - discountAmount;
+
         return response.status(200).json({
             items: cart.items,
+            subtotal: subtotal.toFixed(2),
+            discountCode,
+            discountAmount: discountAmount.toFixed(2),
             total: total.toFixed(2),
         });
     } catch (error) {
@@ -215,6 +258,67 @@ async function DELETE(
         return response.status(200).json({ success: true });
     } catch (error) {
         console.error("Error removing from cart:", error);
+        return response.status(500).json({ error: "Internal server error" });
+    }
+}
+
+async function PATCH(
+    request: NextApiRequest,
+    response: NextApiResponse,
+    userID: number
+) {
+    const { discountCode } = request.body;
+
+    try {
+        const cart = await prisma.cart.findUnique({
+            where: { userId: userID },
+        });
+
+        if (!cart) {
+            return response.status(404).json({ error: "Cart not found" });
+        }
+
+        // If discountCode is provided, validate it first
+        if (discountCode) {
+            const code = await prisma.discountCode.findUnique({
+                where: { code: discountCode.toUpperCase() },
+            });
+
+            if (!code) {
+                return response
+                    .status(400)
+                    .json({ error: "Invalid discount code" });
+            }
+
+            if (!code.isActive) {
+                return response
+                    .status(400)
+                    .json({ error: "Discount code is inactive" });
+            }
+
+            if (code.expiresAt && new Date() > code.expiresAt) {
+                return response
+                    .status(400)
+                    .json({ error: "Discount code has expired" });
+            }
+
+            if (code.usageLimit && code.usedCount >= code.usageLimit) {
+                return response
+                    .status(400)
+                    .json({ error: "Discount code usage limit exceeded" });
+            }
+        }
+
+        await prisma.cart.update({
+            where: { userId: userID },
+            data: {
+                discountCode: discountCode ? discountCode.toUpperCase() : null,
+            },
+        });
+
+        return response.status(200).json({ success: true });
+    } catch (error) {
+        console.error("Error updating cart discount:", error);
         return response.status(500).json({ error: "Internal server error" });
     }
 }

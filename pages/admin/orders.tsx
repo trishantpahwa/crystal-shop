@@ -198,6 +198,13 @@ export default function AdminOrdersPage({ initialOrders }: { initialOrders: Orde
                                     >
                                         Orders
                                     </Button>
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => router.push("/admin/discounts")}
+                                        className={router.pathname === "/admin/discounts" ? "bg-accent-bg" : ""}
+                                    >
+                                        Discounts
+                                    </Button>
                                 </nav>
                             </div>
                             <Button variant="secondary" type="button" onClick={() => router.push("/")}>
