@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { useAuth } from "./AuthProvider";
+import { forceLogoutUser, refreshAuthToken } from "@/config/auth.config";
 
 interface RawCartItem {
     id: number;
@@ -101,6 +102,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 setDiscountCode(null);
                 setDiscountAmount("0.00");
                 setTotal("0.00");
+                if (response.status === 401) {
+                    const isTokenRefreshed = await refreshAuthToken();
+                    if (isTokenRefreshed) {
+                        refreshCart();
+                    } else {
+                        forceLogoutUser();
+                    }
+                } else {
+                    console.error("Failed to fetch cart");
+                    setItems([]);
+                    setTotal("0.00");
+                }
             }
         } catch (error) {
             console.error("Error fetching cart:", error);
@@ -130,12 +143,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 body: JSON.stringify({ productId, quantity }),
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || "Failed to add item to cart");
+            if (response.ok) {
+                await refreshCart();
+            } else {
+                if (response.status === 401) {
+                    const isTokenRefreshed = await refreshAuthToken();
+                    if (isTokenRefreshed) {
+                        await addToCart(productId, quantity);
+                    } else {
+                        forceLogoutUser();
+                        throw new Error("Please sign in to add items to cart");
+                    }
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || "Failed to add item to cart");
+                }
             }
-
-            await refreshCart();
         } catch (error) {
             console.error("Error adding to cart:", error);
             throw error;
@@ -160,12 +183,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 body: JSON.stringify({ productId, quantity }),
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || "Failed to update cart");
+            if (response.ok) {
+                await refreshCart();
+            } else {
+                if (response.status === 401) {
+                    const isTokenRefreshed = await refreshAuthToken();
+                    if (isTokenRefreshed) {
+                        await updateQuantity(productId, quantity);
+                    } else {
+                        forceLogoutUser();
+                        throw new Error("Please sign in to update cart");
+                    }
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || "Failed to update cart");
+                }
             }
-
-            await refreshCart();
         } catch (error) {
             console.error("Error updating cart:", error);
             throw error;
@@ -220,12 +253,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 body: JSON.stringify({ productId }),
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || "Failed to remove item from cart");
+            if (response.ok) {
+                await refreshCart();
+            } else {
+                if (response.status === 401) {
+                    const isTokenRefreshed = await refreshAuthToken();
+                    if (isTokenRefreshed) {
+                        await removeFromCart(productId);
+                    } else {
+                        forceLogoutUser();
+                        throw new Error("Please sign in to remove items from cart");
+                    }
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || "Failed to remove item from cart");
+                }
             }
-
-            await refreshCart();
         } catch (error) {
             console.error("Error removing from cart:", error);
             throw error;

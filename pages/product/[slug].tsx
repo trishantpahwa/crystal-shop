@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import type { Product, Review } from "@/generated/prisma/client";
 import Link from "next/link";
 import prisma from "@/config/prisma.config";
+import { forceLogoutUser, refreshAuthToken } from "@/config/auth.config";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 
@@ -47,6 +48,15 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
             if (response.ok) {
                 const data = await response.json();
                 setHasPurchased(data.hasPurchased || false);
+            } else {
+                if (response.status === 401) {
+                    const isTokenRefreshed = await refreshAuthToken();
+                    if (isTokenRefreshed) {
+                        checkPurchaseStatus();
+                    } else {
+                        forceLogoutUser();
+                    }
+                }
             }
         } catch (error) {
             console.error("Error checking purchase status:", error);
@@ -93,17 +103,26 @@ function ProductPage({ product, averageRating, totalReviews, reviews }: { produc
                 }),
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || "Failed to submit review");
+            if (response.ok) {
+                toast.success("Review submitted successfully!");
+                setShowReviewForm(false);
+                setReviewComment("");
+                setReviewRating(5);
+                // Refresh the page to show the new review
+                window.location.reload();
+            } else {
+                if (response.status === 401) {
+                    const isTokenRefreshed = await refreshAuthToken();
+                    if (isTokenRefreshed) {
+                        handleSubmitReview();
+                    } else {
+                        forceLogoutUser();
+                    }
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || "Failed to submit review");
+                }
             }
-
-            toast.success("Review submitted successfully!");
-            setShowReviewForm(false);
-            setReviewComment("");
-            setReviewRating(5);
-            // Refresh the page to show the new review
-            window.location.reload();
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Failed to submit review");
         } finally {
