@@ -21,6 +21,8 @@ type Order = {
     id: number;
     userId: number;
     total: string;
+    discountCode: string | null;
+    discountAmount: string | null;
     status: OrderStatus;
     shippingAddress: string;
     createdAt: string;
@@ -320,9 +322,17 @@ export default function AdminOrdersPage({ initialOrders }: { initialOrders: Orde
 
                                         <div className="flex flex-col sm:flex-row gap-3">
                                             <div className="text-right">
-                                                <p className="text-primary-text font-semibold text-lg">
-                                                    ₹{order.total}
-                                                </p>
+                                                <div className="space-y-1">
+                                                    {order.discountCode && (
+                                                        <div className="text-sm text-green-600">
+                                                            <span className="font-medium">Discount ({order.discountCode}):</span>
+                                                            <span className="ml-1">-₹{order.discountAmount}</span>
+                                                        </div>
+                                                    )}
+                                                    <p className="text-primary-text font-semibold text-lg">
+                                                        ₹{order.total}
+                                                    </p>
+                                                </div>
                                                 <span
                                                     className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                                                         order.status
@@ -426,7 +436,16 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     // Fetch initial orders
     const prisma = (await import('@/config/prisma.config')).default;
     const orders = await prisma.order.findMany({
-        include: {
+        select: {
+            id: true,
+            userId: true,
+            total: true,
+            discountCode: true,
+            discountAmount: true,
+            status: true,
+            shippingAddress: true,
+            createdAt: true,
+            updatedAt: true,
             user: {
                 select: {
                     id: true,
@@ -436,7 +455,13 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
                 },
             },
             items: {
-                include: {
+                select: {
+                    id: true,
+                    productId: true,
+                    quantity: true,
+                    price: true,
+                    createdAt: true,
+                    updatedAt: true,
                     product: {
                         select: {
                             id: true,
