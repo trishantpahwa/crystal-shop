@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { useAuth } from "./AuthProvider";
+import { forceLogoutUser, refreshAuthToken } from "@/config/auth.config";
 
 interface RawOrderItem {
     id: number;
@@ -90,15 +91,24 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                         ...item,
                         product: {
                             ...item.product,
-                            imageSrc: (item.product.images as {src: string, alt: string}[])?.[0]?.src || "",
-                            imageAlt: (item.product.images as {src: string, alt: string}[])?.[0]?.alt || item.product.name,
+                            imageSrc: (item.product.images as { src: string, alt: string }[])?.[0]?.src || "",
+                            imageAlt: (item.product.images as { src: string, alt: string }[])?.[0]?.alt || item.product.name,
                         },
                     })),
                 }));
                 setOrders(transformedOrders);
             } else {
-                console.error("Failed to fetch orders");
-                setOrders([]);
+                if (response.status === 401) {
+                    const isTokenRefreshed = await refreshAuthToken();
+                    if (isTokenRefreshed) {
+                        refreshOrders();
+                    } else {
+                        forceLogoutUser();
+                    }
+                } else {
+                    console.error("Failed to fetch orders");
+                    setOrders([]);
+                }
             }
         } catch (error) {
             console.error("Error fetching orders:", error);
@@ -124,14 +134,24 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                 body: JSON.stringify({ shippingAddress }),
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || "Failed to create order");
+            if (response.ok) {
+                const newOrder = await response.json();
+                await refreshOrders(); // Refresh orders list
+                return newOrder;
+            } else {
+                if (response.status === 401) {
+                    const isTokenRefreshed = await refreshAuthToken();
+                    if (isTokenRefreshed) {
+                        return await createOrder(shippingAddress);
+                    } else {
+                        forceLogoutUser();
+                        throw new Error("Please sign in to place an order");
+                    }
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || "Failed to create order");
+                }
             }
-
-            const newOrder = await response.json();
-            await refreshOrders(); // Refresh orders list
-            return newOrder;
         } catch (error) {
             console.error("Error creating order:", error);
             throw error;

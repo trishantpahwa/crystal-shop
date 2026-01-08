@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import admin from "firebase-admin";
-import { sign } from "jsonwebtoken";
+import { sign, verify } from "jsonwebtoken";
 import { exit } from "process";
 import prisma from "@/config/prisma.config";
 
@@ -30,11 +30,43 @@ export default async function handler(
     switch (request.method) {
         case "PUT":
             return await PUT(request, response);
+        case "POST":
+            return await POST(request, response);
         default:
             response.setHeader("Allow", ["PUT"]);
             return response
                 .status(405)
                 .end(`Method ${request.method} Not Allowed`);
+    }
+}
+
+async function POST(request: NextApiRequest, response: NextApiResponse) {
+    const { refreshToken } = request.body;
+    try {
+        const userID = verify(
+            refreshToken,
+            process.env.REFRESH_TOKEN_SECRET!
+        ) as {
+            id: string;
+        };
+        const jwt = await sign(
+            {
+                id: userID.id,
+            },
+            process.env.JWT_SECRET!,
+            { expiresIn: "1d" }
+        );
+        const refreshTokenNew = await sign(
+            { id: userID.id },
+            process.env.REFRESH_TOKEN_SECRET!,
+            { expiresIn: "7d" }
+        );
+
+        return response
+            .status(200)
+            .json({ token: jwt, refreshToken: refreshTokenNew });
+    } catch (error) {
+        return response.status(401).json({ error: "Invalid refresh token" });
     }
 }
 
