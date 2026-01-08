@@ -118,11 +118,36 @@ async function POST(
             return response.status(400).json({ error: "Cart is empty" });
         }
 
-        // Calculate total
-        const total = cart.items.reduce((sum, item) => {
+        // Calculate total and discount
+        let subtotal = cart.items.reduce((sum, item) => {
             const price = parseFloat(item.product.price.replace(/[₹,]/g, ""));
             return sum + price * item.quantity;
         }, 0);
+
+        let discountAmount = 0;
+        let discountCode = null;
+
+        if (cart.discountCode) {
+            const code = await prisma.discountCode.findUnique({
+                where: { code: cart.discountCode },
+            });
+
+            if (
+                code &&
+                code.isActive &&
+                (!code.expiresAt || new Date() <= code.expiresAt) &&
+                (!code.usageLimit || code.usedCount < code.usageLimit)
+            ) {
+                discountCode = code.code;
+                if (code.discountType === "PERCENTAGE") {
+                    discountAmount = (subtotal * code.discountValue) / 100;
+                } else {
+                    discountAmount = Math.min(code.discountValue, subtotal);
+                }
+            }
+        }
+
+        const total = subtotal - discountAmount;
 
         // Create order in a transaction
         const order = await prisma.$transaction(async (tx) => {
@@ -131,6 +156,9 @@ async function POST(
                 data: {
                     userId: userID,
                     total: total.toFixed(2),
+                    discountCode,
+                    discountAmount:
+                        discountAmount > 0 ? discountAmount.toFixed(2) : null,
                     shippingAddress,
                 },
             });
@@ -145,9 +173,23 @@ async function POST(
                 })),
             });
 
+            // Increment discount code usage if applied
+            if (discountCode) {
+                await tx.discountCode.update({
+                    where: { code: discountCode },
+                    data: { usedCount: { increment: 1 } },
+                });
+            }
+
             // Clear the cart
             await tx.cartItem.deleteMany({
                 where: { cartId: cart.id },
+            });
+
+            // Clear discount code from cart
+            await tx.cart.update({
+                where: { id: cart.id },
+                data: { discountCode: null },
             });
 
             // Return the order with items

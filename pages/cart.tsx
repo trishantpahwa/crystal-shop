@@ -15,13 +15,15 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 
 export default function Cart() {
-    const { items, total, loading, updateQuantity, removeFromCart, refreshCart } = useCart();
+    const { items, subtotal, discountCode, discountAmount, total, loading, updateQuantity, removeFromCart, applyDiscountCode, refreshCart } = useCart();
     const { createOrder } = useOrders();
     const { isAuthenticated, loading: authLoading } = useAuth();
     const [signingIn, setSigningIn] = useState(false);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [showCheckout, setShowCheckout] = useState(false);
     const [shippingAddress, setShippingAddress] = useState("");
+    const [discountCodeInput, setDiscountCodeInput] = useState("");
+    const [applyingDiscount, setApplyingDiscount] = useState(false);
     const router = useRouter();
 
     // Show loading while authentication is being determined
@@ -73,6 +75,36 @@ export default function Cart() {
             toast.success("Item removed from cart");
         } catch {
             toast.error("Failed to remove item");
+        }
+    };
+
+    const handleApplyDiscount = async () => {
+        if (!discountCodeInput.trim()) {
+            toast.error("Please enter a discount code");
+            return;
+        }
+
+        setApplyingDiscount(true);
+        try {
+            await applyDiscountCode(discountCodeInput.trim().toUpperCase());
+            toast.success("Discount code applied!");
+            setDiscountCodeInput("");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to apply discount code");
+        } finally {
+            setApplyingDiscount(false);
+        }
+    };
+
+    const handleRemoveDiscount = async () => {
+        setApplyingDiscount(true);
+        try {
+            await applyDiscountCode(null);
+            toast.success("Discount code removed");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to remove discount code");
+        } finally {
+            setApplyingDiscount(false);
         }
     };
 
@@ -220,12 +252,55 @@ export default function Cart() {
                                         <div className="space-y-2 mb-4">
                                             <div className="flex justify-between text-text-muted">
                                                 <span>Subtotal</span>
-                                                <span>₹ {total}</span>
+                                                <span>₹ {subtotal}</span>
                                             </div>
+                                            {discountCode && (
+                                                <div className="flex justify-between text-green-600">
+                                                    <span>Discount ({discountCode})</span>
+                                                    <span>-₹ {discountAmount}</span>
+                                                </div>
+                                            )}
                                             <div className="flex justify-between text-text-muted">
                                                 <span>Shipping</span>
                                                 <span>Free</span>
                                             </div>
+                                        </div>
+
+                                        {/* Discount Code Section */}
+                                        <div className="mb-4">
+                                            {!discountCode ? (
+                                                <div className="flex gap-4">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Discount code"
+                                                        value={discountCodeInput}
+                                                        onChange={(e) => setDiscountCodeInput(e.target.value)}
+                                                        className="w-full px-3 py-2 bg-primary-bg border border-border rounded-lg text-primary-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent-bg text-sm"
+                                                        disabled={loading || applyingDiscount}
+                                                    />
+                                                    <Button
+                                                        onClick={handleApplyDiscount}
+                                                        disabled={loading || applyingDiscount || !discountCodeInput.trim()}
+                                                        className="px-3 py-1 text-xs"
+                                                    >
+                                                        {applyingDiscount ? "..." : "Apply"}
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-green-700 font-medium">{discountCode}</span>
+                                                        <span className="text-green-600 text-sm">(-₹{discountAmount})</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={handleRemoveDiscount}
+                                                        disabled={loading || applyingDiscount}
+                                                        className="text-green-600 hover:text-green-800 text-sm underline"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="border-t border-border pt-4 mb-6">
@@ -273,6 +348,18 @@ export default function Cart() {
                                 </div>
 
                                 <div className="border-t border-border pt-4">
+                                    <div className="space-y-1 mb-2">
+                                        <div className="flex justify-between text-text-muted text-sm">
+                                            <span>Subtotal</span>
+                                            <span>₹ {subtotal}</span>
+                                        </div>
+                                        {discountCode && (
+                                            <div className="flex justify-between text-green-600 text-sm">
+                                                <span>Discount ({discountCode})</span>
+                                                <span>-₹ {discountAmount}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="flex justify-between text-primary-text font-semibold">
                                         <span>Total</span>
                                         <span>₹ {total}</span>
