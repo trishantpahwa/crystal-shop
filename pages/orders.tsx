@@ -7,7 +7,7 @@ import { signInWithGoogle } from "@/services/login.service";
 import { useState, useEffect, useCallback } from "react";
 import { GetServerSideProps } from "next";
 import prisma from "@/config/prisma.config";
-import authorize from "@/config/auth.config";
+import authorize, { forceLogoutUser, refreshAuthToken } from "@/config/auth.config";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 
@@ -74,6 +74,15 @@ export default function Orders({ initialOrders = [] }: { initialOrders: Order[] 
                 setOrders(prev => page === 1 ? data : [...prev, ...data]);
                 setPage(prev => prev + 1);
                 setCanLoadMore(data.length === 3);
+            } else {
+                if (response.status === 401) {
+                    const isTokenRefreshed = await refreshAuthToken();
+                    if (isTokenRefreshed) {
+                        loadMoreOrders();
+                    } else {
+                        forceLogoutUser();
+                    }
+                }
             }
         } catch (error) {
             console.error('Failed to load more orders:', error);
